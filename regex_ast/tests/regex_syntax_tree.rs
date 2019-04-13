@@ -35,3 +35,45 @@ fn multiple_concatenations() {
     );
     assert_eq!(expected_tree, tree);
 }
+
+#[test]
+fn alternation() {
+    let regex = "ab|cd";
+    let tree = get_regex_syntax_tree(regex);
+
+    let expected_tree = RegexAstElements::Alternation(
+        Box::new(RegexAstElements::Concatenation(
+            Box::new(RegexAstElements::Leaf('a')),
+            Box::new(RegexAstElements::Leaf('b')),
+        )),
+        Box::new(RegexAstElements::Concatenation(
+            Box::new(RegexAstElements::Leaf('c')),
+            Box::new(RegexAstElements::Leaf('d')),
+        )),
+    );
+    assert_eq!(expected_tree, tree);
+}
+
+#[test]
+fn multiple_alternations() {
+    let regex = "ab|cd|ef";
+    let tree = get_regex_syntax_tree(regex);
+
+    let expected_tree = RegexAstElements::Alternation(
+        Box::new(RegexAstElements::Concatenation(
+            Box::new(RegexAstElements::Leaf('a')),
+            Box::new(RegexAstElements::Leaf('b')),
+        )),
+        Box::new(RegexAstElements::Alternation(
+            Box::new(RegexAstElements::Concatenation(
+                Box::new(RegexAstElements::Leaf('c')),
+                Box::new(RegexAstElements::Leaf('d')),
+            )),
+            Box::new(RegexAstElements::Concatenation(
+                Box::new(RegexAstElements::Leaf('e')),
+                Box::new(RegexAstElements::Leaf('f')),
+            )),
+        )),
+    );
+    assert_eq!(expected_tree, tree);
+}
