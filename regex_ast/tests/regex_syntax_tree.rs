@@ -77,3 +77,28 @@ fn multiple_alternations() {
     );
     assert_eq!(expected_tree, tree);
 }
+
+#[test]
+fn zero_or_more_repetition() {
+    let regex = "b*";
+    let tree = get_regex_syntax_tree(regex);
+
+    let expected_tree = RegexAstElements::ZeroOrMore(
+        Box::new(RegexAstElements::Leaf('b')),
+    );
+    assert_eq!(expected_tree, tree);
+}
+
+#[test]
+fn zero_or_more_repetition_with_noise() {
+    let regex = "ab*";
+    let tree = get_regex_syntax_tree(regex);
+
+    let expected_tree = RegexAstElements::Concatenation(
+        Box::new(RegexAstElements::Leaf('a')),
+        Box::new(RegexAstElements::ZeroOrMore(
+            Box::new(RegexAstElements::Leaf('b')),
+        )),
+    );
+    assert_eq!(expected_tree, tree);
+}
