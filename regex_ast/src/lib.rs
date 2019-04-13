@@ -27,14 +27,22 @@ pub fn get_regex_syntax_tree(regex: &str) -> RegexAstElements {
             let characters: Vec<char> = group.chars().collect();
             let leaf_character = characters[0];
             match ast {
-                RegexAstElements::None => ast = RegexAstElements::Leaf(leaf_character),
-                RegexAstElements::Leaf(_) => ast = RegexAstElements::Concatenation(
-                    Box::new(ast),
-                    Box::new(RegexAstElements::Leaf(leaf_character)),
-                ),
+                RegexAstElements::None => {
+                    println!("Add first leaf {}", leaf_character);
+                    ast = RegexAstElements::Leaf(leaf_character);
+                },
+                _ => {
+                        println!("Add concatenation for character {}", leaf_character);
+                        ast = RegexAstElements::Concatenation(
+                        Box::new(ast),
+                        Box::new(RegexAstElements::Leaf(leaf_character)),
+                    );
+                },
                 _ => {},
             }
         }
+
+        println!("{:#?}", ast);
     }
 
     return ast;
