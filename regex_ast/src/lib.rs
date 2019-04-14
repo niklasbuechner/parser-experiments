@@ -13,6 +13,7 @@ struct State {
     pub character: char,
     pub left_next: Option<Vec<usize>>,
     pub right_next: Option<Vec<usize>>,
+    pub is_escaped: bool,
 }
 impl State {
     pub fn new(character: char, left_next: Option<Vec<usize>>, right_next: Option<Vec<usize>>) -> Self {
@@ -20,6 +21,16 @@ impl State {
             character,
             left_next,
             right_next,
+            is_escaped: false,
+        }
+    }
+
+    pub fn new_escaped(character: char, left_next: Option<Vec<usize>>, right_next: Option<Vec<usize>>) -> Self {
+        State {
+            character,
+            left_next,
+            right_next,
+            is_escaped: true,
         }
     }
 }
@@ -46,6 +57,7 @@ impl ConcatenationList {
 
 fn calculate_concatenation_list(stack: &mut Vec<State>, regex: &str) -> ConcatenationList {
     let regex_characters: Vec<char> = regex.chars().collect();
+    let mut character_is_escaped = false;
     let mut concatenation_list = Vec::new();
 
     let mut index = 0;
@@ -57,6 +69,16 @@ fn calculate_concatenation_list(stack: &mut Vec<State>, regex: &str) -> Concaten
             return ConcatenationList::new(concatenation_list, index);
         }
         let character = regex_characters[index];
+
+        if character_is_escaped {
+            concatenation_list.push(stack.len());
+            stack.push(State::new_escaped(character, None, None));
+
+            character_is_escaped = false;
+            index += 1;
+
+            continue;
+        }
 
         match character {
             '*' => {
@@ -98,6 +120,7 @@ fn calculate_concatenation_list(stack: &mut Vec<State>, regex: &str) -> Concaten
                     index + 1 + second_concatenation_list.consumed_characters
                 );
             },
+            '\\' => character_is_escaped = true,
             _ => {
                 concatenation_list.push(stack.len());
                 stack.push(State::new(character, None, None));
@@ -115,7 +138,15 @@ fn get_ast_for_concatenation_list(stack: &Vec<State>, concatenation_list: &Vec<u
         let next_state_index = concatenation_list[index];
         let state = &stack[next_state_index];
 
-        match state.character {
+        // The operator_character is used to allow for escaped operators. Therefore the
+        // operator_character should not be used when constructing an ast!
+        let operator_character;
+        if state.is_escaped {
+            operator_character = 'a';
+        } else {
+            operator_character = state.character;
+        }
+        match operator_character {
             '*' => {
                 let left_list = match state.left_next {
                     Some(ref list) => list,

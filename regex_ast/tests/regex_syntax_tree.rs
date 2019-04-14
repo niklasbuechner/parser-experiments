@@ -135,6 +135,36 @@ fn one_or_more_repetition() {
 }
 
 #[test]
+fn escaped_plus_operator() {
+    let regex = "ab\\+";
+    let tree = get_regex_syntax_tree(regex);
+
+    let expected_tree = RegexAstElements::Concatenation(
+        Box::new(RegexAstElements::Concatenation(
+            Box::new(RegexAstElements::Leaf('a')),
+            Box::new(RegexAstElements::Leaf('b')),
+        )),
+        Box::new(RegexAstElements::Leaf('+')),
+    );
+    assert_eq!(expected_tree, tree);
+}
+
+#[test]
+fn escaped_alternation_operator() {
+    let regex = "ab\\|";
+    let tree = get_regex_syntax_tree(regex);
+
+    let expected_tree = RegexAstElements::Concatenation(
+        Box::new(RegexAstElements::Concatenation(
+            Box::new(RegexAstElements::Leaf('a')),
+            Box::new(RegexAstElements::Leaf('b')),
+        )),
+        Box::new(RegexAstElements::Leaf('|')),
+    );
+    assert_eq!(expected_tree, tree);
+}
+
+#[test]
 fn group() {
     let regex = "a(bc)d";
     let tree = get_regex_syntax_tree(regex);
