@@ -119,3 +119,69 @@ fn one_or_more_repetition() {
     );
     assert_eq!(expected_tree, tree);
 }
+
+#[test]
+fn group() {
+    let regex = "a(bc)d";
+    let tree = get_regex_syntax_tree(regex);
+
+    let expected_tree = RegexAstElements::Concatenation(
+        Box::new(RegexAstElements::Concatenation(
+            Box::new(RegexAstElements::Concatenation(
+                Box::new(RegexAstElements::Leaf('a')),
+                Box::new(RegexAstElements::Leaf('b')),
+            )),
+            Box::new(RegexAstElements::Leaf('c')),
+        )),
+        Box::new(RegexAstElements::Leaf('d')),
+    );
+    assert_eq!(expected_tree, tree);
+}
+
+#[test]
+fn group_with_alternation() {
+    let regex = "a(b|c)";
+    let tree = get_regex_syntax_tree(regex);
+
+    let expected_tree = RegexAstElements::Concatenation(
+        Box::new(RegexAstElements::Leaf('a')),
+        Box::new(RegexAstElements::Alternation(
+            Box::new(RegexAstElements::Leaf('b')),
+            Box::new(RegexAstElements::Leaf('c')),
+        )),
+    );
+    assert_eq!(expected_tree, tree);
+}
+
+#[test]
+fn multiple_groups_with_multiple_alternations() {
+    let regex = "a(b(cd|e)|fg*)h";
+    let tree = get_regex_syntax_tree(regex);
+
+    let expected_tree = RegexAstElements::Concatenation(
+        Box::new(RegexAstElements::Concatenation(
+            Box::new(RegexAstElements::Leaf('a')),
+            Box::new(RegexAstElements::Alternation(
+                Box::new(RegexAstElements::Concatenation(
+                    Box::new(RegexAstElements::Leaf('b')),
+                    Box::new(RegexAstElements::Alternation(
+                        Box::new(RegexAstElements::Concatenation(
+                            Box::new(RegexAstElements::Leaf('c')),
+                            Box::new(RegexAstElements::Leaf('d')),
+                        )),
+                        Box::new(RegexAstElements::Leaf('e')),
+                    )),
+                )),
+                Box::new(RegexAstElements::Concatenation(
+                    Box::new(RegexAstElements::Leaf('f')),
+                    Box::new(RegexAstElements::ZeroOrMore(
+                        Box::new(RegexAstElements::Leaf('g')),
+                    )),
+                )),
+            )),
+        )),
+        Box::new(RegexAstElements::Leaf('h')),
+    );
+
+    assert_eq!(expected_tree, tree);
+}

@@ -27,17 +27,33 @@ pub fn get_regex_syntax_tree(regex: &str) -> RegexAstElements {
     let mut stack = Vec::with_capacity(regex.len());
     let concatenation_list = calculate_concatenation_list(&mut stack, regex);
 
-    return get_ast_for_concatenation_list(&stack, &concatenation_list);
+    return get_ast_for_concatenation_list(&stack, &concatenation_list.list);
 }
 
-fn calculate_concatenation_list(stack: &mut Vec<State>, regex: &str) -> Vec<usize> {
+struct ConcatenationList {
+    list: Vec<usize>,
+    consumed_characters: usize,
+}
+impl ConcatenationList {
+    pub fn new(list: Vec<usize>, consumed_characters: usize) -> Self {
+        ConcatenationList {
+            list,
+            consumed_characters,
+        }
+    }
+}
+
+fn calculate_concatenation_list(stack: &mut Vec<State>, regex: &str) -> ConcatenationList {
     let regex_characters: Vec<char> = regex.chars().collect();
     let mut concatenation_list = Vec::new();
 
     let mut index = 0;
     loop {
         if index >= regex_characters.len() {
-            return concatenation_list;
+            // Here the index is NOT one short of the amount of characters we have consumed, since
+            // at the end of the last iteration it was increased by one and we have not yet
+            // consumed another character.
+            return ConcatenationList::new(concatenation_list, index);
         }
         let character = regex_characters[index];
 
@@ -54,12 +70,26 @@ fn calculate_concatenation_list(stack: &mut Vec<State>, regex: &str) -> Vec<usiz
                 concatenation_list.push(stack.len());
                 stack.push(State::new('*', Some(vec![last_state_index]), None));
             },
+            '(' => {
+                let mut group_list = calculate_concatenation_list(stack, &regex[index + 1..]);
+                concatenation_list.append(&mut group_list.list);
+                index += group_list.consumed_characters;
+            },
+            ')' => {
+                // The index is always 1 short of how many characters we have consumed.
+                return ConcatenationList::new(concatenation_list, index + 1);
+            },
             '|' => {
                 let first_list = concatenation_list;
-                let second_list = calculate_concatenation_list(stack, &regex[index + 1..]);
+                let second_concatenation_list = calculate_concatenation_list(stack, &regex[index + 1..]);
+                let second_list = second_concatenation_list.list;
                 stack.push(State::new('|', Some(first_list), Some(second_list)));
 
-                return vec![stack.len() - 1];
+                return ConcatenationList::new(
+                    vec![stack.len() - 1],
+                    // The index is always 1 short of how many characters we have consumed.
+                    index + 1 + second_concatenation_list.consumed_characters
+                );
             },
             _ => {
                 concatenation_list.push(stack.len());
@@ -77,7 +107,6 @@ fn get_ast_for_concatenation_list(stack: &Vec<State>, concatenation_list: &Vec<u
     for index in 0..concatenation_list.len() {
         let next_state_index = concatenation_list[index];
         let state = &stack[next_state_index];
-        println!("Character: {}", state.character);
 
         match state.character {
             '*' => {
@@ -107,12 +136,18 @@ fn get_ast_for_concatenation_list(stack: &Vec<State>, concatenation_list: &Vec<u
                     None => panic!("This can't be happening"),
                 };
 
-                println!("{:#?}", get_ast_for_concatenation_list(stack, left_list));
-                println!("{:#?}", get_ast_for_concatenation_list(stack, right_list));
-                return RegexAstElements::Alternation(
+                let alternation_ast = RegexAstElements::Alternation(
                     Box::new(get_ast_for_concatenation_list(stack, left_list)),
                     Box::new(get_ast_for_concatenation_list(stack, right_list)),
                 );
+
+                match ast {
+                    RegexAstElements::None => ast = alternation_ast,
+                    _ => ast = RegexAstElements::Concatenation(
+                        Box::new(ast),
+                        Box::new(alternation_ast),
+                    ),
+                }
             },
             _ => {
                 match ast {
