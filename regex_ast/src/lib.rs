@@ -5,6 +5,7 @@ pub enum RegexAstElements {
     Leaf(char),
     None,
     ZeroOrMore(Box<RegexAstElements>),
+    ZeroOrOne(Box<RegexAstElements>),
 }
 
 #[derive(Debug, PartialEq)]
@@ -63,6 +64,12 @@ fn calculate_concatenation_list(stack: &mut Vec<State>, regex: &str) -> Concaten
                 let last_state_index = concatenation_list[list_length - 1];
                 concatenation_list[list_length - 1] = stack.len();
                 stack.push(State::new('*', Some(vec![last_state_index]), None));
+            },
+            '?' => {
+                let list_length = concatenation_list.len();
+                let last_state_index = concatenation_list[list_length - 1];
+                concatenation_list[list_length - 1] = stack.len();
+                stack.push(State::new('?', Some(vec![last_state_index]), None));
             },
             '+' => {
                 let list_length = concatenation_list.len();
@@ -123,6 +130,23 @@ fn get_ast_for_concatenation_list(stack: &Vec<State>, concatenation_list: &Vec<u
                     _ => ast = RegexAstElements::Concatenation(
                         Box::new(ast),
                         Box::new(zero_or_more_ast),
+                    ),
+                }
+            },
+            '?' => {
+                let left_list = match state.left_next {
+                    Some(ref list) => list,
+                    None => panic!("This can't be happening"),
+                };
+                let zero_or_one_ast = RegexAstElements::ZeroOrOne(Box::new(
+                    get_ast_for_concatenation_list(&stack, left_list)
+                ));
+
+                match ast {
+                    RegexAstElements::None => ast = zero_or_one_ast,
+                    _ => ast = RegexAstElements::Concatenation(
+                        Box::new(ast),
+                        Box::new(zero_or_one_ast),
                     ),
                 }
             },
