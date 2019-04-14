@@ -48,6 +48,12 @@ fn calculate_concatenation_list(stack: &mut Vec<State>, regex: &str) -> Vec<usiz
                 concatenation_list[list_length - 1] = stack.len();
                 stack.push(State::new('*', Some(vec![last_state_index]), None));
             },
+            '+' => {
+                let list_length = concatenation_list.len();
+                let last_state_index = concatenation_list[list_length - 1];
+                concatenation_list.push(stack.len());
+                stack.push(State::new('*', Some(vec![last_state_index]), None));
+            },
             '|' => {
                 let first_list = concatenation_list;
                 let second_list = calculate_concatenation_list(stack, &regex[index + 1..]);
