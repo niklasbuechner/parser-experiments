@@ -56,8 +56,7 @@ impl ConcatenationList {
 }
 
 fn calculate_concatenation_list(stack: &mut Vec<State>, regex: &str) -> ConcatenationList {
-    let regex_characters: Vec<char> = regex.chars().collect();
-    let mut character_is_escaped = false;
+    let regex_characters = get_character_array(regex);
     let mut character_is_in_quotes = false;
     let mut concatenation_list = Vec::new();
 
@@ -129,6 +128,53 @@ fn calculate_concatenation_list(stack: &mut Vec<State>, regex: &str) -> Concaten
 
         index += 1;
     }
+}
+
+fn get_character_array(regex: &str) -> Vec<char> {
+    let input_characters: Vec<char> = regex.chars().collect();
+    let mut output_characters = Vec::with_capacity(input_characters.len());
+    let mut state = 0;
+
+    for index in 0..input_characters.len() {
+        let current_character = input_characters[index];
+        match state {
+            0 => {
+                match current_character {
+                    '\\' => state = 1,
+                    _ => output_characters.push(current_character),
+                }
+            },
+            // the previous character was '\'
+            1 => {
+                match current_character {
+                    'r' => {
+                        output_characters.push('\r');
+                        state = 0;
+                    },
+                    'n' => {
+                        output_characters.push('\n');
+                        state = 0;
+                    },
+                    't' => {
+                        output_characters.push('\t');
+                        state = 0;
+                    },
+                    '\\' => output_characters.push('\\'),
+                    _ => {
+                        output_characters.push('\\');
+                        output_characters.push(current_character);
+                    },
+                }
+            },
+            _ => {},
+        }
+    }
+
+    if state != 0 {
+        output_characters.push('\\');
+    }
+
+    return output_characters;
 }
 
 fn get_ast_for_concatenation_list(stack: &Vec<State>, concatenation_list: &Vec<usize>) -> RegexAstElements {

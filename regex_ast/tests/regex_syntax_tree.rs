@@ -262,3 +262,29 @@ fn line_breaks() {
     assert_eq!(expected_tree, tree);
 }
 
+#[test]
+fn backslack_at_end() {
+    let regex = "a\\";
+    let tree = get_regex_syntax_tree(regex);
+
+    let expected_tree = RegexAstElements::Concatenation(
+        Box::new(RegexAstElements::Leaf('a')),
+        Box::new(RegexAstElements::Leaf('\\')),
+    );
+    assert_eq!(expected_tree, tree);
+}
+
+#[test]
+fn line_break_after_backslash() {
+    let regex = "a\\\\n";
+    let tree = get_regex_syntax_tree(regex);
+
+    let expected_tree = RegexAstElements::Concatenation(
+        Box::new(RegexAstElements::Concatenation(
+            Box::new(RegexAstElements::Leaf('a')),
+            Box::new(RegexAstElements::Leaf('\\')),
+        )),
+        Box::new(RegexAstElements::Leaf('\n')),
+    );
+    assert_eq!(expected_tree, tree);
+}
