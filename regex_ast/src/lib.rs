@@ -71,15 +71,11 @@ fn calculate_concatenation_list(stack: &mut Vec<State>, regex: &str) -> Concaten
         }
         let character = regex_characters[index];
 
-        if character_is_escaped || (character_is_in_quotes && character != '"') {
+        if character_is_in_quotes && character != '"' {
             concatenation_list.push(stack.len());
             stack.push(State::new_escaped(character, None, None));
 
             index += 1;
-
-            if character_is_escaped {
-                character_is_escaped = false;
-            }
 
             continue;
         }
@@ -124,7 +120,6 @@ fn calculate_concatenation_list(stack: &mut Vec<State>, regex: &str) -> Concaten
                     index + 1 + second_concatenation_list.consumed_characters
                 );
             },
-            '\\' => character_is_escaped = true,
             '"' => character_is_in_quotes = !character_is_in_quotes,
             _ => {
                 concatenation_list.push(stack.len());

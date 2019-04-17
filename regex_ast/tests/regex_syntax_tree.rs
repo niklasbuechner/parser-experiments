@@ -135,36 +135,6 @@ fn one_or_more_repetition() {
 }
 
 #[test]
-fn escaped_plus_operator() {
-    let regex = "ab\\+";
-    let tree = get_regex_syntax_tree(regex);
-
-    let expected_tree = RegexAstElements::Concatenation(
-        Box::new(RegexAstElements::Concatenation(
-            Box::new(RegexAstElements::Leaf('a')),
-            Box::new(RegexAstElements::Leaf('b')),
-        )),
-        Box::new(RegexAstElements::Leaf('+')),
-    );
-    assert_eq!(expected_tree, tree);
-}
-
-#[test]
-fn escaped_alternation_operator() {
-    let regex = "ab\\|";
-    let tree = get_regex_syntax_tree(regex);
-
-    let expected_tree = RegexAstElements::Concatenation(
-        Box::new(RegexAstElements::Concatenation(
-            Box::new(RegexAstElements::Leaf('a')),
-            Box::new(RegexAstElements::Leaf('b')),
-        )),
-        Box::new(RegexAstElements::Leaf('|')),
-    );
-    assert_eq!(expected_tree, tree);
-}
-
-#[test]
 fn escaped_plus_operator_through_quotes() {
     let regex = "ab\"+\"";
     let tree = get_regex_syntax_tree(regex);
@@ -279,3 +249,16 @@ fn multiple_groups_with_multiple_alternations() {
 
     assert_eq!(expected_tree, tree);
 }
+
+#[test]
+fn line_breaks() {
+    let regex = "a\\n";
+    let tree = get_regex_syntax_tree(regex);
+
+    let expected_tree = RegexAstElements::Concatenation(
+        Box::new(RegexAstElements::Leaf('a')),
+        Box::new(RegexAstElements::Leaf('\n')),
+    );
+    assert_eq!(expected_tree, tree);
+}
+
