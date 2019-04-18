@@ -1,12 +1,13 @@
-use regex_ast::get_regex_syntax_tree;
+use regex_ast::Group;
 use regex_ast::RegexAstElements;
+use regex_ast::get_regex_syntax_tree;
 
 #[test]
 fn single_leaf() {
     let regex = "a";
     let tree = get_regex_syntax_tree(regex);
 
-    assert_eq!(RegexAstElements::Leaf('a'), tree);
+    assert_eq!(RegexAstElements::Leaf(Group::Character('a')), tree);
 }
 
 #[test]
@@ -15,8 +16,8 @@ fn concatenation() {
     let tree = get_regex_syntax_tree(regex);
 
     let expected_tree = RegexAstElements::Concatenation(
-        Box::new(RegexAstElements::Leaf('a')),
-        Box::new(RegexAstElements::Leaf('b')),
+        Box::new(RegexAstElements::Leaf(Group::Character('a'))),
+        Box::new(RegexAstElements::Leaf(Group::Character('b'))),
     );
     assert_eq!(expected_tree, tree);
 }
@@ -28,10 +29,10 @@ fn multiple_concatenations() {
 
     let expected_tree = RegexAstElements::Concatenation(
         Box::new(RegexAstElements::Concatenation(
-            Box::new(RegexAstElements::Leaf('a')),
-            Box::new(RegexAstElements::Leaf('b')),
+            Box::new(RegexAstElements::Leaf(Group::Character('a'))),
+            Box::new(RegexAstElements::Leaf(Group::Character('b'))),
         )),
-        Box::new(RegexAstElements::Leaf('c')),
+        Box::new(RegexAstElements::Leaf(Group::Character('c'))),
     );
     assert_eq!(expected_tree, tree);
 }
@@ -43,12 +44,12 @@ fn alternation() {
 
     let expected_tree = RegexAstElements::Alternation(
         Box::new(RegexAstElements::Concatenation(
-            Box::new(RegexAstElements::Leaf('a')),
-            Box::new(RegexAstElements::Leaf('b')),
+            Box::new(RegexAstElements::Leaf(Group::Character('a'))),
+            Box::new(RegexAstElements::Leaf(Group::Character('b'))),
         )),
         Box::new(RegexAstElements::Concatenation(
-            Box::new(RegexAstElements::Leaf('c')),
-            Box::new(RegexAstElements::Leaf('d')),
+            Box::new(RegexAstElements::Leaf(Group::Character('c'))),
+            Box::new(RegexAstElements::Leaf(Group::Character('d'))),
         )),
     );
     assert_eq!(expected_tree, tree);
@@ -61,17 +62,17 @@ fn multiple_alternations() {
 
     let expected_tree = RegexAstElements::Alternation(
         Box::new(RegexAstElements::Concatenation(
-            Box::new(RegexAstElements::Leaf('a')),
-            Box::new(RegexAstElements::Leaf('b')),
+            Box::new(RegexAstElements::Leaf(Group::Character('a'))),
+            Box::new(RegexAstElements::Leaf(Group::Character('b'))),
         )),
         Box::new(RegexAstElements::Alternation(
             Box::new(RegexAstElements::Concatenation(
-                Box::new(RegexAstElements::Leaf('c')),
-                Box::new(RegexAstElements::Leaf('d')),
+                Box::new(RegexAstElements::Leaf(Group::Character('c'))),
+                Box::new(RegexAstElements::Leaf(Group::Character('d'))),
             )),
             Box::new(RegexAstElements::Concatenation(
-                Box::new(RegexAstElements::Leaf('e')),
-                Box::new(RegexAstElements::Leaf('f')),
+                Box::new(RegexAstElements::Leaf(Group::Character('e'))),
+                Box::new(RegexAstElements::Leaf(Group::Character('f'))),
             )),
         )),
     );
@@ -84,7 +85,7 @@ fn zero_or_more_repetition() {
     let tree = get_regex_syntax_tree(regex);
 
     let expected_tree = RegexAstElements::ZeroOrMore(
-        Box::new(RegexAstElements::Leaf('b')),
+        Box::new(RegexAstElements::Leaf(Group::Character('b'))),
     );
     assert_eq!(expected_tree, tree);
 }
@@ -95,9 +96,9 @@ fn zero_or_more_repetition_with_noise() {
     let tree = get_regex_syntax_tree(regex);
 
     let expected_tree = RegexAstElements::Concatenation(
-        Box::new(RegexAstElements::Leaf('a')),
+        Box::new(RegexAstElements::Leaf(Group::Character('a'))),
         Box::new(RegexAstElements::ZeroOrMore(
-            Box::new(RegexAstElements::Leaf('b')),
+            Box::new(RegexAstElements::Leaf(Group::Character('b'))),
         )),
     );
     assert_eq!(expected_tree, tree);
@@ -109,9 +110,9 @@ fn zero_or_one_repetition() {
     let tree = get_regex_syntax_tree(regex);
 
     let expected_tree = RegexAstElements::Concatenation(
-        Box::new(RegexAstElements::Leaf('a')),
+        Box::new(RegexAstElements::Leaf(Group::Character('a'))),
         Box::new(RegexAstElements::ZeroOrOne(
-            Box::new(RegexAstElements::Leaf('b')),
+            Box::new(RegexAstElements::Leaf(Group::Character('b'))),
         )),
     );
     assert_eq!(expected_tree, tree);
@@ -124,11 +125,11 @@ fn one_or_more_repetition() {
 
     let expected_tree = RegexAstElements::Concatenation(
         Box::new(RegexAstElements::Concatenation(
-            Box::new(RegexAstElements::Leaf('a')),
-            Box::new(RegexAstElements::Leaf('b')),
+            Box::new(RegexAstElements::Leaf(Group::Character('a'))),
+            Box::new(RegexAstElements::Leaf(Group::Character('b'))),
         )),
         Box::new(RegexAstElements::ZeroOrMore(
-            Box::new(RegexAstElements::Leaf('b')),
+            Box::new(RegexAstElements::Leaf(Group::Character('b'))),
         )),
     );
     assert_eq!(expected_tree, tree);
@@ -141,10 +142,10 @@ fn escaped_plus_operator_through_quotes() {
 
     let expected_tree = RegexAstElements::Concatenation(
         Box::new(RegexAstElements::Concatenation(
-            Box::new(RegexAstElements::Leaf('a')),
-            Box::new(RegexAstElements::Leaf('b')),
+            Box::new(RegexAstElements::Leaf(Group::Character('a'))),
+            Box::new(RegexAstElements::Leaf(Group::Character('b'))),
         )),
-        Box::new(RegexAstElements::Leaf('+')),
+        Box::new(RegexAstElements::Leaf(Group::Character('+'))),
     );
     assert_eq!(expected_tree, tree);
 }
@@ -156,10 +157,10 @@ fn escaped_concatenation_in_quotes() {
 
     let expected_tree = RegexAstElements::Concatenation(
         Box::new(RegexAstElements::Concatenation(
-            Box::new(RegexAstElements::Leaf('a')),
-            Box::new(RegexAstElements::Leaf('+')),
+            Box::new(RegexAstElements::Leaf(Group::Character('a'))),
+            Box::new(RegexAstElements::Leaf(Group::Character('+'))),
         )),
-        Box::new(RegexAstElements::Leaf('?')),
+        Box::new(RegexAstElements::Leaf(Group::Character('?'))),
     );
     assert_eq!(expected_tree, tree);
 }
@@ -172,13 +173,13 @@ fn escaped_concatenation_in_quotes_followed_by_normal_regex() {
     let expected_tree = RegexAstElements::Concatenation(
         Box::new(RegexAstElements::Concatenation(
             Box::new(RegexAstElements::Concatenation(
-                Box::new(RegexAstElements::Leaf('a')),
-                Box::new(RegexAstElements::Leaf('+')),
+                Box::new(RegexAstElements::Leaf(Group::Character('a'))),
+                Box::new(RegexAstElements::Leaf(Group::Character('+'))),
             )),
-            Box::new(RegexAstElements::Leaf('?')),
+            Box::new(RegexAstElements::Leaf(Group::Character('?'))),
         )),
         Box::new(RegexAstElements::ZeroOrOne(
-            Box::new(RegexAstElements::Leaf('a')),
+            Box::new(RegexAstElements::Leaf(Group::Character('a'))),
         )),
     );
     assert_eq!(expected_tree, tree);
@@ -192,12 +193,12 @@ fn group() {
     let expected_tree = RegexAstElements::Concatenation(
         Box::new(RegexAstElements::Concatenation(
             Box::new(RegexAstElements::Concatenation(
-                Box::new(RegexAstElements::Leaf('a')),
-                Box::new(RegexAstElements::Leaf('b')),
+                Box::new(RegexAstElements::Leaf(Group::Character('a'))),
+                Box::new(RegexAstElements::Leaf(Group::Character('b'))),
             )),
-            Box::new(RegexAstElements::Leaf('c')),
+            Box::new(RegexAstElements::Leaf(Group::Character('c'))),
         )),
-        Box::new(RegexAstElements::Leaf('d')),
+        Box::new(RegexAstElements::Leaf(Group::Character('d'))),
     );
     assert_eq!(expected_tree, tree);
 }
@@ -208,10 +209,10 @@ fn group_with_alternation() {
     let tree = get_regex_syntax_tree(regex);
 
     let expected_tree = RegexAstElements::Concatenation(
-        Box::new(RegexAstElements::Leaf('a')),
+        Box::new(RegexAstElements::Leaf(Group::Character('a'))),
         Box::new(RegexAstElements::Alternation(
-            Box::new(RegexAstElements::Leaf('b')),
-            Box::new(RegexAstElements::Leaf('c')),
+            Box::new(RegexAstElements::Leaf(Group::Character('b'))),
+            Box::new(RegexAstElements::Leaf(Group::Character('c'))),
         )),
     );
     assert_eq!(expected_tree, tree);
@@ -224,27 +225,27 @@ fn multiple_groups_with_multiple_alternations() {
 
     let expected_tree = RegexAstElements::Concatenation(
         Box::new(RegexAstElements::Concatenation(
-            Box::new(RegexAstElements::Leaf('a')),
+            Box::new(RegexAstElements::Leaf(Group::Character('a'))),
             Box::new(RegexAstElements::Alternation(
                 Box::new(RegexAstElements::Concatenation(
-                    Box::new(RegexAstElements::Leaf('b')),
+                    Box::new(RegexAstElements::Leaf(Group::Character('b'))),
                     Box::new(RegexAstElements::Alternation(
                         Box::new(RegexAstElements::Concatenation(
-                            Box::new(RegexAstElements::Leaf('c')),
-                            Box::new(RegexAstElements::Leaf('d')),
+                            Box::new(RegexAstElements::Leaf(Group::Character('c'))),
+                            Box::new(RegexAstElements::Leaf(Group::Character('d'))),
                         )),
-                        Box::new(RegexAstElements::Leaf('e')),
+                        Box::new(RegexAstElements::Leaf(Group::Character('e'))),
                     )),
                 )),
                 Box::new(RegexAstElements::Concatenation(
-                    Box::new(RegexAstElements::Leaf('f')),
+                    Box::new(RegexAstElements::Leaf(Group::Character('f'))),
                     Box::new(RegexAstElements::ZeroOrMore(
-                        Box::new(RegexAstElements::Leaf('g')),
+                        Box::new(RegexAstElements::Leaf(Group::Character('g'))),
                     )),
                 )),
             )),
         )),
-        Box::new(RegexAstElements::Leaf('h')),
+        Box::new(RegexAstElements::Leaf(Group::Character('h'))),
     );
 
     assert_eq!(expected_tree, tree);
@@ -256,8 +257,8 @@ fn line_breaks() {
     let tree = get_regex_syntax_tree(regex);
 
     let expected_tree = RegexAstElements::Concatenation(
-        Box::new(RegexAstElements::Leaf('a')),
-        Box::new(RegexAstElements::Leaf('\n')),
+        Box::new(RegexAstElements::Leaf(Group::Character('a'))),
+        Box::new(RegexAstElements::Leaf(Group::Character('\n'))),
     );
     assert_eq!(expected_tree, tree);
 }
@@ -268,8 +269,8 @@ fn backslack_at_end() {
     let tree = get_regex_syntax_tree(regex);
 
     let expected_tree = RegexAstElements::Concatenation(
-        Box::new(RegexAstElements::Leaf('a')),
-        Box::new(RegexAstElements::Leaf('\\')),
+        Box::new(RegexAstElements::Leaf(Group::Character('a'))),
+        Box::new(RegexAstElements::Leaf(Group::Character('\\'))),
     );
     assert_eq!(expected_tree, tree);
 }
@@ -281,10 +282,10 @@ fn line_break_after_backslash() {
 
     let expected_tree = RegexAstElements::Concatenation(
         Box::new(RegexAstElements::Concatenation(
-            Box::new(RegexAstElements::Leaf('a')),
-            Box::new(RegexAstElements::Leaf('\\')),
+            Box::new(RegexAstElements::Leaf(Group::Character('a'))),
+            Box::new(RegexAstElements::Leaf(Group::Character('\\'))),
         )),
-        Box::new(RegexAstElements::Leaf('\n')),
+        Box::new(RegexAstElements::Leaf(Group::Character('\n'))),
     );
     assert_eq!(expected_tree, tree);
 }

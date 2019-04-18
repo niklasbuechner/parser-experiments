@@ -2,32 +2,37 @@
 pub enum RegexAstElements {
     Alternation(Box<RegexAstElements>, Box<RegexAstElements>),
     Concatenation(Box<RegexAstElements>, Box<RegexAstElements>),
-    Leaf(char),
+    Leaf(Group),
     None,
     ZeroOrMore(Box<RegexAstElements>),
     ZeroOrOne(Box<RegexAstElements>),
 }
 
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum Group {
+    Character(char),
+}
+
 #[derive(Debug, PartialEq)]
 struct State {
-    pub character: char,
+    pub matching_group: Group,
     pub left_next: Option<Vec<usize>>,
     pub right_next: Option<Vec<usize>>,
     pub is_escaped: bool,
 }
 impl State {
-    pub fn new(character: char, left_next: Option<Vec<usize>>, right_next: Option<Vec<usize>>) -> Self {
+    pub fn new(matching_group: Group, left_next: Option<Vec<usize>>, right_next: Option<Vec<usize>>) -> Self {
         State {
-            character,
+            matching_group,
             left_next,
             right_next,
             is_escaped: false,
         }
     }
 
-    pub fn new_escaped(character: char, left_next: Option<Vec<usize>>, right_next: Option<Vec<usize>>) -> Self {
+    pub fn new_escaped(matching_group: Group, left_next: Option<Vec<usize>>, right_next: Option<Vec<usize>>) -> Self {
         State {
-            character,
+            matching_group,
             left_next,
             right_next,
             is_escaped: true,
@@ -70,7 +75,7 @@ fn calculate_concatenation_list(stack: &mut Vec<State>, regex: &str) -> Concaten
         }
         let character = regex_characters[index];
 
-        if character_is_in_quotes && character != '"' {
+        if character_is_in_quotes && character != Group::Character('"') {
             concatenation_list.push(stack.len());
             stack.push(State::new_escaped(character, None, None));
 
@@ -80,38 +85,38 @@ fn calculate_concatenation_list(stack: &mut Vec<State>, regex: &str) -> Concaten
         }
 
         match character {
-            '*' => {
+            Group::Character('*') => {
                 let list_length = concatenation_list.len();
                 let last_state_index = concatenation_list[list_length - 1];
                 concatenation_list[list_length - 1] = stack.len();
-                stack.push(State::new('*', Some(vec![last_state_index]), None));
+                stack.push(State::new(Group::Character('*'), Some(vec![last_state_index]), None));
             },
-            '?' => {
+            Group::Character('?') => {
                 let list_length = concatenation_list.len();
                 let last_state_index = concatenation_list[list_length - 1];
                 concatenation_list[list_length - 1] = stack.len();
-                stack.push(State::new('?', Some(vec![last_state_index]), None));
+                stack.push(State::new(Group::Character('?'), Some(vec![last_state_index]), None));
             },
-            '+' => {
+            Group::Character('+') => {
                 let list_length = concatenation_list.len();
                 let last_state_index = concatenation_list[list_length - 1];
                 concatenation_list.push(stack.len());
-                stack.push(State::new('*', Some(vec![last_state_index]), None));
+                stack.push(State::new(Group::Character('*'), Some(vec![last_state_index]), None));
             },
-            '(' => {
+            Group::Character('(') => {
                 let mut group_list = calculate_concatenation_list(stack, &regex[index + 1..]);
                 concatenation_list.append(&mut group_list.list);
                 index += group_list.consumed_characters;
             },
-            ')' => {
+            Group::Character(')') => {
                 // The index is always 1 short of how many characters we have consumed.
                 return ConcatenationList::new(concatenation_list, index + 1);
             },
-            '|' => {
+            Group::Character('|') => {
                 let first_list = concatenation_list;
                 let second_concatenation_list = calculate_concatenation_list(stack, &regex[index + 1..]);
                 let second_list = second_concatenation_list.list;
-                stack.push(State::new('|', Some(first_list), Some(second_list)));
+                stack.push(State::new(Group::Character('|'), Some(first_list), Some(second_list)));
 
                 return ConcatenationList::new(
                     vec![stack.len() - 1],
@@ -119,7 +124,7 @@ fn calculate_concatenation_list(stack: &mut Vec<State>, regex: &str) -> Concaten
                     index + 1 + second_concatenation_list.consumed_characters
                 );
             },
-            '"' => character_is_in_quotes = !character_is_in_quotes,
+            Group::Character('"') => character_is_in_quotes = !character_is_in_quotes,
             _ => {
                 concatenation_list.push(stack.len());
                 stack.push(State::new(character, None, None));
@@ -130,7 +135,7 @@ fn calculate_concatenation_list(stack: &mut Vec<State>, regex: &str) -> Concaten
     }
 }
 
-fn get_character_array(regex: &str) -> Vec<char> {
+fn get_character_array(regex: &str) -> Vec<Group> {
     let input_characters: Vec<char> = regex.chars().collect();
     let mut output_characters = Vec::with_capacity(input_characters.len());
     let mut state = 0;
@@ -141,28 +146,28 @@ fn get_character_array(regex: &str) -> Vec<char> {
             0 => {
                 match current_character {
                     '\\' => state = 1,
-                    _ => output_characters.push(current_character),
+                    _ => output_characters.push(Group::Character(current_character)),
                 }
             },
             // the previous character was '\'
             1 => {
                 match current_character {
                     'r' => {
-                        output_characters.push('\r');
+                        output_characters.push(Group::Character('\r'));
                         state = 0;
                     },
                     'n' => {
-                        output_characters.push('\n');
+                        output_characters.push(Group::Character('\n'));
                         state = 0;
                     },
                     't' => {
-                        output_characters.push('\t');
+                        output_characters.push(Group::Character('\t'));
                         state = 0;
                     },
-                    '\\' => output_characters.push('\\'),
+                    '\\' => output_characters.push(Group::Character('\\')),
                     _ => {
-                        output_characters.push('\\');
-                        output_characters.push(current_character);
+                        output_characters.push(Group::Character('\\'));
+                        output_characters.push(Group::Character(current_character));
                     },
                 }
             },
@@ -171,7 +176,7 @@ fn get_character_array(regex: &str) -> Vec<char> {
     }
 
     if state != 0 {
-        output_characters.push('\\');
+        output_characters.push(Group::Character('\\'));
     }
 
     return output_characters;
@@ -188,12 +193,12 @@ fn get_ast_for_concatenation_list(stack: &Vec<State>, concatenation_list: &Vec<u
         // operator_character should not be used when constructing an ast!
         let operator_character;
         if state.is_escaped {
-            operator_character = 'a';
+            operator_character = Group::Character('a');
         } else {
-            operator_character = state.character;
+            operator_character = state.matching_group;
         }
         match operator_character {
-            '*' => {
+            Group::Character('*') => {
                 let left_list = match state.left_next {
                     Some(ref list) => list,
                     None => panic!("This can't be happening"),
@@ -210,7 +215,7 @@ fn get_ast_for_concatenation_list(stack: &Vec<State>, concatenation_list: &Vec<u
                     ),
                 }
             },
-            '?' => {
+            Group::Character('?') => {
                 let left_list = match state.left_next {
                     Some(ref list) => list,
                     None => panic!("This can't be happening"),
@@ -227,7 +232,7 @@ fn get_ast_for_concatenation_list(stack: &Vec<State>, concatenation_list: &Vec<u
                     ),
                 }
             },
-            '|' => {
+            Group::Character('|') => {
                 let left_list = match state.left_next {
                     Some(ref list) => list,
                     None => panic!("This can't be happening"),
@@ -252,11 +257,11 @@ fn get_ast_for_concatenation_list(stack: &Vec<State>, concatenation_list: &Vec<u
             },
             _ => {
                 match ast {
-                    RegexAstElements::None => ast = RegexAstElements::Leaf(state.character),
+                    RegexAstElements::None => ast = RegexAstElements::Leaf(state.matching_group),
                     _ => {
                         ast = RegexAstElements::Concatenation(
                             Box::new(ast),
-                            Box::new(RegexAstElements::Leaf(state.character)),
+                            Box::new(RegexAstElements::Leaf(state.matching_group)),
                         );
                     }
                 }
