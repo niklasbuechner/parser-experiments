@@ -302,3 +302,75 @@ fn character_group() {
     ]));
     assert_eq!(expected_tree, tree);
 }
+
+#[test]
+fn long_character_group() {
+    let regex = "[abcdef]";
+    let tree = get_regex_syntax_tree(regex);
+
+    let expected_tree = RegexAstElements::Leaf(MatchingGroup::Group(vec![
+        MatchingGroupElements::Character('a'),
+        MatchingGroupElements::Character('b'),
+        MatchingGroupElements::Character('c'),
+        MatchingGroupElements::Character('d'),
+        MatchingGroupElements::Character('e'),
+        MatchingGroupElements::Character('f'),
+    ]));
+    assert_eq!(expected_tree, tree);
+}
+
+#[test]
+fn character_group_with_range() {
+    let regex = "[a-c]";
+    let tree = get_regex_syntax_tree(regex);
+
+    let expected_tree = RegexAstElements::Leaf(MatchingGroup::Group(vec![
+        MatchingGroupElements::Range('a', 'c'),
+    ]));
+    assert_eq!(expected_tree, tree);
+}
+
+#[test]
+fn character_group_only_looking_like_range() {
+    let regex = "[a-]";
+    let tree = get_regex_syntax_tree(regex);
+
+    let expected_tree = RegexAstElements::Leaf(MatchingGroup::Group(vec![
+        MatchingGroupElements::Character('a'),
+        MatchingGroupElements::Character('-'),
+    ]));
+    assert_eq!(expected_tree, tree);
+}
+
+#[test]
+fn character_group_with_other_symbols() {
+    let regex = "[a-*9#_&%$@!]";
+    let tree = get_regex_syntax_tree(regex);
+
+    let expected_tree = RegexAstElements::Leaf(MatchingGroup::Group(vec![
+        MatchingGroupElements::Character('a'),
+        MatchingGroupElements::Character('-'),
+        MatchingGroupElements::Character('*'),
+        MatchingGroupElements::Character('9'),
+        MatchingGroupElements::Character('#'),
+        MatchingGroupElements::Character('_'),
+        MatchingGroupElements::Character('&'),
+        MatchingGroupElements::Character('%'),
+        MatchingGroupElements::Character('$'),
+        MatchingGroupElements::Character('@'),
+        MatchingGroupElements::Character('!'),
+    ]));
+    assert_eq!(expected_tree, tree);
+}
+
+#[test]
+fn negative_character_group() {
+    let regex = "[^ab]";
+    let tree = get_regex_syntax_tree(regex);
+
+    let expected_tree = RegexAstElements::Leaf(MatchingGroup::NegativeGroup(vec![
+        MatchingGroupElements::Character('a'),
+        MatchingGroupElements::Character('b'),
+    ]));
+    assert_eq!(expected_tree, tree);
+}

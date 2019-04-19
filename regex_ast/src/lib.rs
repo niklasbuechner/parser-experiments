@@ -13,12 +13,14 @@ pub enum RegexAstElements {
 #[derive(Clone, Debug, PartialEq)]
 pub enum MatchingGroup {
     Character(char),
-    Group(Vec<MatchingGroupElements>)
+    Group(Vec<MatchingGroupElements>),
+    NegativeGroup(Vec<MatchingGroupElements>),
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum MatchingGroupElements {
     Character(char),
+    Range(char, char),
 }
 impl From<MatchingGroup> for MatchingGroupElements {
     fn from(matching_group: MatchingGroup) -> Self {
@@ -224,6 +226,14 @@ fn get_character_group(characters: &[MatchingGroup]) -> CharacterGroupCalculatio
     let mut group = Vec::new();
     let mut previous_character = ' ';
 
+    let negative_group;
+    if characters.len() > 0 && characters[0] == MatchingGroup::Character('^') {
+        negative_group = true;
+        index += 1;
+    } else {
+        negative_group = false;
+    }
+
     loop {
         let character;
         if index < characters.len() {
@@ -241,7 +251,13 @@ fn get_character_group(characters: &[MatchingGroup]) -> CharacterGroupCalculatio
         match state {
             0 => {
                 match actual_character {
-                    ']' => return CharacterGroupCalculation::new(MatchingGroup::Group(group), index + 2),
+                    ']' => {
+                        if negative_group {
+                            return CharacterGroupCalculation::new(MatchingGroup::NegativeGroup(group), index + 2)
+                        } else {
+                            return CharacterGroupCalculation::new(MatchingGroup::Group(group), index + 2);
+                        }
+                    },
                     'a'..='z' | '0'..='9' => {
                         state = 1;
                         previous_character = *actual_character;
@@ -256,19 +272,52 @@ fn get_character_group(characters: &[MatchingGroup]) -> CharacterGroupCalculatio
                         group.push(MatchingGroupElements::Character(previous_character));
                         previous_character = *actual_character;
                     },
+                    '-' => {
+                        state = 2;
+                    },
                     ']' => {
                         group.push(MatchingGroupElements::Character(previous_character));
 
-                        return CharacterGroupCalculation::new(MatchingGroup::Group(group), index + 2);
+                        if negative_group {
+                            return CharacterGroupCalculation::new(MatchingGroup::NegativeGroup(group), index + 2)
+                        } else {
+                            return CharacterGroupCalculation::new(MatchingGroup::Group(group), index + 2);
+                        }
                     },
                     _ => {
                         group.push(MatchingGroupElements::Character(previous_character));
                         group.push(MatchingGroupElements::from(character.clone()));
 
-                        state = 1;
+                        state = 0;
                     }
                 }
-            }
+            },
+            // The last character was a `-` after a range starting character
+            2 => {
+                match actual_character {
+                    'a'..='z' | '0'..='9' => {
+                        group.push(MatchingGroupElements::Range(previous_character, *actual_character));
+                        state = 0;
+                    },
+                    ']' => {
+                        group.push(MatchingGroupElements::Character(previous_character));
+                        group.push(MatchingGroupElements::Character('-'));
+
+                        if negative_group {
+                            return CharacterGroupCalculation::new(MatchingGroup::NegativeGroup(group), index + 2)
+                        } else {
+                            return CharacterGroupCalculation::new(MatchingGroup::Group(group), index + 2);
+                        }
+                    },
+                    _ => {
+                        group.push(MatchingGroupElements::Character(previous_character));
+                        group.push(MatchingGroupElements::Character('-'));
+                        group.push(MatchingGroupElements::from(character.clone()));
+
+                        state = 0;
+                    }
+                }
+            },
             _ => {},
         }
     }
