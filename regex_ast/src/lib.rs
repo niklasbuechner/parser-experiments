@@ -1,4 +1,5 @@
 use std::convert::From;
+use std::convert::TryFrom;
 
 #[derive(Debug, PartialEq)]
 pub enum RegexAstElements {
@@ -162,6 +163,7 @@ fn calculate_concatenation_list(stack: &mut Vec<State>, regex: &str) -> Concaten
 
 fn get_character_array(regex: &str) -> Vec<MatchingGroup> {
     let input_characters: Vec<char> = regex.chars().collect();
+    let mut first_hexa_character = ' ';
     let mut output_characters = Vec::with_capacity(input_characters.len());
     let mut state = 0;
 
@@ -169,13 +171,15 @@ fn get_character_array(regex: &str) -> Vec<MatchingGroup> {
         let current_character = input_characters[index];
         match state {
             0 => {
+                println!("0");
                 match current_character {
                     '\\' => state = 1,
                     _ => output_characters.push(MatchingGroup::Character(current_character)),
                 }
             },
-            // the previous character was '\'
+            // The previous character was '\'
             1 => {
+                println!("1");
                 match current_character {
                     'r' => {
                         output_characters.push(MatchingGroup::Character('\r'));
@@ -189,6 +193,9 @@ fn get_character_array(regex: &str) -> Vec<MatchingGroup> {
                         output_characters.push(MatchingGroup::Character('\t'));
                         state = 0;
                     },
+                    'x' => {
+                        state = 2;
+                    },
                     '\\' => output_characters.push(MatchingGroup::Character('\\')),
                     _ => {
                         output_characters.push(MatchingGroup::Character('\\'));
@@ -196,6 +203,64 @@ fn get_character_array(regex: &str) -> Vec<MatchingGroup> {
                     },
                 }
             },
+            // The previous characters where `\x`
+            2 => {
+                println!("2");
+                match current_character {
+                    '0'..='9' | 'a'..='f' | 'A'..='F' => {
+                        first_hexa_character = current_character;
+                        state = 3;
+                    },
+                    '\\' => {
+                        output_characters.push(MatchingGroup::Character('\\'));
+                        output_characters.push(MatchingGroup::Character('x'));
+
+                        state = 1;
+                    },
+                    _ => {
+                        output_characters.push(MatchingGroup::Character('\\'));
+                        output_characters.push(MatchingGroup::Character('x'));
+                        output_characters.push(MatchingGroup::Character(current_character));
+                    },
+                }
+            },
+            // The previous characters where `\x` and a hex character
+            3 => {
+                println!("3");
+                match current_character {
+                    '0'..='9' | 'a'..='f' | 'A'..='F' => {
+                        let first_character_value = get_character_hex_value(first_hexa_character);
+                        let second_character_value = get_character_hex_value(current_character);
+                        let character_value = first_character_value * 16 + second_character_value;
+                        println!("{}", character_value);
+
+                        match char::try_from(character_value) {
+                            Ok(character) => {
+                                println!("Char: -{}-", character);
+                                output_characters.push(MatchingGroup::Character(character))
+                            },
+                            Err(_) => panic!("Invalid hex character found"),
+                        }
+
+                        state = 0;
+                    },
+                    '\\' => {
+                        output_characters.push(MatchingGroup::Character('\\'));
+                        output_characters.push(MatchingGroup::Character('x'));
+                        output_characters.push(MatchingGroup::Character(first_hexa_character));
+
+                        state = 1;
+                    },
+                    _ => {
+                        output_characters.push(MatchingGroup::Character('\\'));
+                        output_characters.push(MatchingGroup::Character('x'));
+                        output_characters.push(MatchingGroup::Character(first_hexa_character));
+                        output_characters.push(MatchingGroup::Character(current_character));
+
+                        state = 0;
+                    },
+                }
+            }
             _ => {},
         }
     }
@@ -205,6 +270,28 @@ fn get_character_array(regex: &str) -> Vec<MatchingGroup> {
     }
 
     return output_characters;
+}
+
+fn get_character_hex_value(character: char) -> u32 {
+    return match character.to_ascii_lowercase() {
+        '0' => 0,
+        '1' => 1,
+        '2' => 2,
+        '3' => 3,
+        '4' => 4,
+        '5' => 5,
+        '6' => 6,
+        '7' => 7,
+        '8' => 8,
+        '9' => 9,
+        'a' => 10,
+        'b' => 11,
+        'c' => 12,
+        'd' => 13,
+        'e' => 14,
+        'f' => 15,
+        _ => panic!("{} is no valid hex character", character),
+    }
 }
 
 struct CharacterGroupCalculation {

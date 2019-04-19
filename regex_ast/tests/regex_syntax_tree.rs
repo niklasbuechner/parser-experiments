@@ -292,6 +292,27 @@ fn line_break_after_backslash() {
 }
 
 #[test]
+fn hexa_characters() {
+    let regex = "\\xff";
+    let tree = get_regex_syntax_tree(regex);
+
+    let expected_tree = RegexAstElements::Leaf(MatchingGroup::Character('ÿ'));
+    assert_eq!(expected_tree, tree);
+}
+
+#[test]
+fn multiple_hexa_characters() {
+    let regex = "\\xff\\xff";
+    let tree = get_regex_syntax_tree(regex);
+
+    let expected_tree = RegexAstElements::Concatenation(
+        Box::new(RegexAstElements::Leaf(MatchingGroup::Character('ÿ'))),
+        Box::new(RegexAstElements::Leaf(MatchingGroup::Character('ÿ'))),
+    );
+    assert_eq!(expected_tree, tree);
+}
+
+#[test]
 fn character_group() {
     let regex = "[ab]";
     let tree = get_regex_syntax_tree(regex);
