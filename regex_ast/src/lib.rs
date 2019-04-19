@@ -26,7 +26,9 @@ pub enum MatchingGroupElements {
 impl From<MatchingGroup> for MatchingGroupElements {
     fn from(matching_group: MatchingGroup) -> Self {
         match matching_group {
-            MatchingGroup::Character(character) => return MatchingGroupElements::Character(character),
+            MatchingGroup::Character(character) => {
+                return MatchingGroupElements::Character(character)
+            }
             _ => panic!("Trying to convert a group into a character"),
         }
     }
@@ -40,7 +42,11 @@ struct State {
     pub is_escaped: bool,
 }
 impl State {
-    pub fn new(matching_group: MatchingGroup, left_next: Option<Vec<usize>>, right_next: Option<Vec<usize>>) -> Self {
+    pub fn new(
+        matching_group: MatchingGroup,
+        left_next: Option<Vec<usize>>,
+        right_next: Option<Vec<usize>>,
+    ) -> Self {
         State {
             matching_group,
             left_next,
@@ -49,7 +55,11 @@ impl State {
         }
     }
 
-    pub fn new_escaped(matching_group: MatchingGroup, left_next: Option<Vec<usize>>, right_next: Option<Vec<usize>>) -> Self {
+    pub fn new_escaped(
+        matching_group: MatchingGroup,
+        left_next: Option<Vec<usize>>,
+        right_next: Option<Vec<usize>>,
+    ) -> Self {
         State {
             matching_group,
             left_next,
@@ -115,46 +125,63 @@ fn calculate_concatenation_list(stack: &mut Vec<State>, regex: &str) -> Concaten
                 let list_length = concatenation_list.len();
                 let last_state_index = concatenation_list[list_length - 1];
                 concatenation_list[list_length - 1] = stack.len();
-                stack.push(State::new(MatchingGroup::Character('*'), Some(vec![last_state_index]), None));
-            },
+                stack.push(State::new(
+                    MatchingGroup::Character('*'),
+                    Some(vec![last_state_index]),
+                    None,
+                ));
+            }
             MatchingGroup::Character('?') => {
                 let list_length = concatenation_list.len();
                 let last_state_index = concatenation_list[list_length - 1];
                 concatenation_list[list_length - 1] = stack.len();
-                stack.push(State::new(MatchingGroup::Character('?'), Some(vec![last_state_index]), None));
-            },
+                stack.push(State::new(
+                    MatchingGroup::Character('?'),
+                    Some(vec![last_state_index]),
+                    None,
+                ));
+            }
             MatchingGroup::Character('+') => {
                 let list_length = concatenation_list.len();
                 let last_state_index = concatenation_list[list_length - 1];
                 concatenation_list.push(stack.len());
-                stack.push(State::new(MatchingGroup::Character('*'), Some(vec![last_state_index]), None));
-            },
+                stack.push(State::new(
+                    MatchingGroup::Character('*'),
+                    Some(vec![last_state_index]),
+                    None,
+                ));
+            }
             MatchingGroup::Character('(') => {
                 let mut group_list = calculate_concatenation_list(stack, &regex[index + 1..]);
                 concatenation_list.append(&mut group_list.list);
                 index += group_list.consumed_characters;
-            },
+            }
             MatchingGroup::Character(')') => {
                 // The index is always 1 short of how many characters we have consumed.
                 return ConcatenationList::new(concatenation_list, index + 1);
-            },
+            }
             MatchingGroup::Character('|') => {
                 let first_list = concatenation_list;
-                let second_concatenation_list = calculate_concatenation_list(stack, &regex[index + 1..]);
+                let second_concatenation_list =
+                    calculate_concatenation_list(stack, &regex[index + 1..]);
                 let second_list = second_concatenation_list.list;
-                stack.push(State::new(MatchingGroup::Character('|'), Some(first_list), Some(second_list)));
+                stack.push(State::new(
+                    MatchingGroup::Character('|'),
+                    Some(first_list),
+                    Some(second_list),
+                ));
 
                 return ConcatenationList::new(
                     vec![stack.len() - 1],
                     // The index is always 1 short of how many characters we have consumed.
-                    index + 1 + second_concatenation_list.consumed_characters
+                    index + 1 + second_concatenation_list.consumed_characters,
                 );
-            },
+            }
             MatchingGroup::Character('"') => character_is_in_quotes = !character_is_in_quotes,
             _ => {
                 concatenation_list.push(stack.len());
                 stack.push(State::new(character.clone(), None, None));
-            },
+            }
         }
 
         index += 1;
@@ -176,7 +203,7 @@ fn get_character_array(regex: &str) -> Vec<MatchingGroup> {
                     '\\' => state = 1,
                     _ => output_characters.push(MatchingGroup::Character(current_character)),
                 }
-            },
+            }
             // The previous character was '\'
             1 => {
                 println!("1");
@@ -184,25 +211,25 @@ fn get_character_array(regex: &str) -> Vec<MatchingGroup> {
                     'r' => {
                         output_characters.push(MatchingGroup::Character('\r'));
                         state = 0;
-                    },
+                    }
                     'n' => {
                         output_characters.push(MatchingGroup::Character('\n'));
                         state = 0;
-                    },
+                    }
                     't' => {
                         output_characters.push(MatchingGroup::Character('\t'));
                         state = 0;
-                    },
+                    }
                     'x' => {
                         state = 2;
-                    },
+                    }
                     '\\' => output_characters.push(MatchingGroup::Character('\\')),
                     _ => {
                         output_characters.push(MatchingGroup::Character('\\'));
                         output_characters.push(MatchingGroup::Character(current_character));
-                    },
+                    }
                 }
-            },
+            }
             // The previous characters where `\x`
             2 => {
                 println!("2");
@@ -210,20 +237,20 @@ fn get_character_array(regex: &str) -> Vec<MatchingGroup> {
                     '0'..='9' | 'a'..='f' | 'A'..='F' => {
                         first_hexa_character = current_character;
                         state = 3;
-                    },
+                    }
                     '\\' => {
                         output_characters.push(MatchingGroup::Character('\\'));
                         output_characters.push(MatchingGroup::Character('x'));
 
                         state = 1;
-                    },
+                    }
                     _ => {
                         output_characters.push(MatchingGroup::Character('\\'));
                         output_characters.push(MatchingGroup::Character('x'));
                         output_characters.push(MatchingGroup::Character(current_character));
-                    },
+                    }
                 }
-            },
+            }
             // The previous characters where `\x` and a hex character
             3 => {
                 println!("3");
@@ -238,19 +265,19 @@ fn get_character_array(regex: &str) -> Vec<MatchingGroup> {
                             Ok(character) => {
                                 println!("Char: -{}-", character);
                                 output_characters.push(MatchingGroup::Character(character))
-                            },
+                            }
                             Err(_) => panic!("Invalid hex character found"),
                         }
 
                         state = 0;
-                    },
+                    }
                     '\\' => {
                         output_characters.push(MatchingGroup::Character('\\'));
                         output_characters.push(MatchingGroup::Character('x'));
                         output_characters.push(MatchingGroup::Character(first_hexa_character));
 
                         state = 1;
-                    },
+                    }
                     _ => {
                         output_characters.push(MatchingGroup::Character('\\'));
                         output_characters.push(MatchingGroup::Character('x'));
@@ -258,10 +285,10 @@ fn get_character_array(regex: &str) -> Vec<MatchingGroup> {
                         output_characters.push(MatchingGroup::Character(current_character));
 
                         state = 0;
-                    },
+                    }
                 }
             }
-            _ => {},
+            _ => {}
         }
     }
 
@@ -291,7 +318,7 @@ fn get_character_hex_value(character: char) -> u32 {
         'e' => 14,
         'f' => 15,
         _ => panic!("{} is no valid hex character", character),
-    }
+    };
 }
 
 struct CharacterGroupCalculation {
@@ -336,81 +363,99 @@ fn get_character_group(characters: &[MatchingGroup]) -> CharacterGroupCalculatio
         };
 
         match state {
-            0 => {
-                match actual_character {
-                    ']' => {
-                        if negative_group {
-                            return CharacterGroupCalculation::new(MatchingGroup::NegativeGroup(group), index + 2)
-                        } else {
-                            return CharacterGroupCalculation::new(MatchingGroup::Group(group), index + 2);
-                        }
-                    },
-                    'a'..='z' | '0'..='9' => {
-                        state = 1;
-                        previous_character = *actual_character;
+            0 => match actual_character {
+                ']' => {
+                    if negative_group {
+                        return CharacterGroupCalculation::new(
+                            MatchingGroup::NegativeGroup(group),
+                            index + 2,
+                        );
+                    } else {
+                        return CharacterGroupCalculation::new(
+                            MatchingGroup::Group(group),
+                            index + 2,
+                        );
                     }
-                    _ => group.push(MatchingGroupElements::from(character.clone())),
                 }
+                'a'..='z' | '0'..='9' => {
+                    state = 1;
+                    previous_character = *actual_character;
+                }
+                _ => group.push(MatchingGroupElements::from(character.clone())),
             },
             // The character could be the start of a range e.g. a-c
-            1 => {
-                match actual_character {
-                    'a'..='z' | '0'..='9' => {
-                        group.push(MatchingGroupElements::Character(previous_character));
-                        previous_character = *actual_character;
-                    },
-                    '-' => {
-                        state = 2;
-                    },
-                    ']' => {
-                        group.push(MatchingGroupElements::Character(previous_character));
+            1 => match actual_character {
+                'a'..='z' | '0'..='9' => {
+                    group.push(MatchingGroupElements::Character(previous_character));
+                    previous_character = *actual_character;
+                }
+                '-' => {
+                    state = 2;
+                }
+                ']' => {
+                    group.push(MatchingGroupElements::Character(previous_character));
 
-                        if negative_group {
-                            return CharacterGroupCalculation::new(MatchingGroup::NegativeGroup(group), index + 2)
-                        } else {
-                            return CharacterGroupCalculation::new(MatchingGroup::Group(group), index + 2);
-                        }
-                    },
-                    _ => {
-                        group.push(MatchingGroupElements::Character(previous_character));
-                        group.push(MatchingGroupElements::from(character.clone()));
-
-                        state = 0;
+                    if negative_group {
+                        return CharacterGroupCalculation::new(
+                            MatchingGroup::NegativeGroup(group),
+                            index + 2,
+                        );
+                    } else {
+                        return CharacterGroupCalculation::new(
+                            MatchingGroup::Group(group),
+                            index + 2,
+                        );
                     }
+                }
+                _ => {
+                    group.push(MatchingGroupElements::Character(previous_character));
+                    group.push(MatchingGroupElements::from(character.clone()));
+
+                    state = 0;
                 }
             },
             // The last character was a `-` after a range starting character
-            2 => {
-                match actual_character {
-                    'a'..='z' | '0'..='9' => {
-                        group.push(MatchingGroupElements::Range(previous_character, *actual_character));
-                        state = 0;
-                    },
-                    ']' => {
-                        group.push(MatchingGroupElements::Character(previous_character));
-                        group.push(MatchingGroupElements::Character('-'));
+            2 => match actual_character {
+                'a'..='z' | '0'..='9' => {
+                    group.push(MatchingGroupElements::Range(
+                        previous_character,
+                        *actual_character,
+                    ));
+                    state = 0;
+                }
+                ']' => {
+                    group.push(MatchingGroupElements::Character(previous_character));
+                    group.push(MatchingGroupElements::Character('-'));
 
-                        if negative_group {
-                            return CharacterGroupCalculation::new(MatchingGroup::NegativeGroup(group), index + 2)
-                        } else {
-                            return CharacterGroupCalculation::new(MatchingGroup::Group(group), index + 2);
-                        }
-                    },
-                    _ => {
-                        group.push(MatchingGroupElements::Character(previous_character));
-                        group.push(MatchingGroupElements::Character('-'));
-                        group.push(MatchingGroupElements::from(character.clone()));
-
-                        state = 0;
+                    if negative_group {
+                        return CharacterGroupCalculation::new(
+                            MatchingGroup::NegativeGroup(group),
+                            index + 2,
+                        );
+                    } else {
+                        return CharacterGroupCalculation::new(
+                            MatchingGroup::Group(group),
+                            index + 2,
+                        );
                     }
                 }
+                _ => {
+                    group.push(MatchingGroupElements::Character(previous_character));
+                    group.push(MatchingGroupElements::Character('-'));
+                    group.push(MatchingGroupElements::from(character.clone()));
+
+                    state = 0;
+                }
             },
-            _ => {},
+            _ => {}
         }
     }
 }
 
-fn get_ast_for_concatenation_list(stack: &Vec<State>, concatenation_list: &Vec<usize>) -> RegexAstElements {
+fn get_ast_for_concatenation_list(
+    stack: &Vec<State>,
+    concatenation_list: &Vec<usize>,
+) -> RegexAstElements {
     let mut ast = RegexAstElements::None;
 
     for index in 0..concatenation_list.len() {
@@ -432,34 +477,38 @@ fn get_ast_for_concatenation_list(stack: &Vec<State>, concatenation_list: &Vec<u
                     None => panic!("This can't be happening"),
                 };
                 let zero_or_more_ast = RegexAstElements::ZeroOrMore(Box::new(
-                    get_ast_for_concatenation_list(&stack, left_list)
+                    get_ast_for_concatenation_list(&stack, left_list),
                 ));
 
                 match ast {
                     RegexAstElements::None => ast = zero_or_more_ast,
-                    _ => ast = RegexAstElements::Concatenation(
-                        Box::new(ast),
-                        Box::new(zero_or_more_ast),
-                    ),
+                    _ => {
+                        ast = RegexAstElements::Concatenation(
+                            Box::new(ast),
+                            Box::new(zero_or_more_ast),
+                        )
+                    }
                 }
-            },
+            }
             MatchingGroup::Character('?') => {
                 let left_list = match state.left_next {
                     Some(ref list) => list,
                     None => panic!("This can't be happening"),
                 };
                 let zero_or_one_ast = RegexAstElements::ZeroOrOne(Box::new(
-                    get_ast_for_concatenation_list(&stack, left_list)
+                    get_ast_for_concatenation_list(&stack, left_list),
                 ));
 
                 match ast {
                     RegexAstElements::None => ast = zero_or_one_ast,
-                    _ => ast = RegexAstElements::Concatenation(
-                        Box::new(ast),
-                        Box::new(zero_or_one_ast),
-                    ),
+                    _ => {
+                        ast = RegexAstElements::Concatenation(
+                            Box::new(ast),
+                            Box::new(zero_or_one_ast),
+                        )
+                    }
                 }
-            },
+            }
             MatchingGroup::Character('|') => {
                 let left_list = match state.left_next {
                     Some(ref list) => list,
@@ -477,21 +526,23 @@ fn get_ast_for_concatenation_list(stack: &Vec<State>, concatenation_list: &Vec<u
 
                 match ast {
                     RegexAstElements::None => ast = alternation_ast,
-                    _ => ast = RegexAstElements::Concatenation(
-                        Box::new(ast),
-                        Box::new(alternation_ast),
-                    ),
-                }
-            },
-            _ => {
-                match ast {
-                    RegexAstElements::None => ast = RegexAstElements::Leaf(state.matching_group.clone()),
                     _ => {
                         ast = RegexAstElements::Concatenation(
                             Box::new(ast),
-                            Box::new(RegexAstElements::Leaf(state.matching_group.clone())),
-                        );
+                            Box::new(alternation_ast),
+                        )
                     }
+                }
+            }
+            _ => match ast {
+                RegexAstElements::None => {
+                    ast = RegexAstElements::Leaf(state.matching_group.clone())
+                }
+                _ => {
+                    ast = RegexAstElements::Concatenation(
+                        Box::new(ast),
+                        Box::new(RegexAstElements::Leaf(state.matching_group.clone())),
+                    );
                 }
             },
         }
