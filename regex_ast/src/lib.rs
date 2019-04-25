@@ -16,6 +16,7 @@ pub enum MatchingGroup {
     Character(char),
     Group(Vec<MatchingGroupElements>),
     NegativeGroup(Vec<MatchingGroupElements>),
+    AcceptedState,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -191,7 +192,7 @@ fn calculate_concatenation_list(stack: &mut Vec<State>, regex: &str) -> Concaten
 fn get_character_array(regex: &str) -> Vec<MatchingGroup> {
     let input_characters: Vec<char> = regex.chars().collect();
     let mut first_hexa_character = ' ';
-    let mut output_characters = Vec::with_capacity(input_characters.len());
+    let mut output_characters = Vec::with_capacity(input_characters.len() + 1);
     let mut state = 0;
 
     for index in 0..input_characters.len() {
@@ -454,7 +455,7 @@ fn get_character_group(characters: &[MatchingGroup]) -> CharacterGroupCalculatio
     }
 }
 
-fn get_ast_for_concatenation_list(
+fn get_partial_ast_for_concatenation_list(
     stack: &Vec<State>,
     concatenation_list: &Vec<usize>,
 ) -> RegexAstElements {
@@ -479,7 +480,7 @@ fn get_ast_for_concatenation_list(
                     None => panic!("This can't be happening"),
                 };
                 let zero_or_more_ast = RegexAstElements::ZeroOrMore(Box::new(
-                    get_ast_for_concatenation_list(&stack, left_list),
+                    get_partial_ast_for_concatenation_list(&stack, left_list),
                 ));
 
                 match ast {
@@ -498,7 +499,7 @@ fn get_ast_for_concatenation_list(
                     None => panic!("This can't be happening"),
                 };
                 let zero_or_one_ast = RegexAstElements::ZeroOrOne(Box::new(
-                    get_ast_for_concatenation_list(&stack, left_list),
+                    get_partial_ast_for_concatenation_list(&stack, left_list),
                 ));
 
                 match ast {
@@ -522,8 +523,8 @@ fn get_ast_for_concatenation_list(
                 };
 
                 let alternation_ast = RegexAstElements::Alternation(
-                    Box::new(get_ast_for_concatenation_list(stack, left_list)),
-                    Box::new(get_ast_for_concatenation_list(stack, right_list)),
+                    Box::new(get_partial_ast_for_concatenation_list(stack, left_list)),
+                    Box::new(get_partial_ast_for_concatenation_list(stack, right_list)),
                 );
 
                 match ast {
@@ -551,4 +552,16 @@ fn get_ast_for_concatenation_list(
     }
 
     return ast;
+}
+
+fn get_ast_for_concatenation_list(
+    stack: &Vec<State>,
+    concatenation_list: &Vec<usize>,
+) -> RegexAstElements {
+    let ast = get_partial_ast_for_concatenation_list(stack, concatenation_list);
+
+    return RegexAstElements::Concatenation(
+        Box::new(ast),
+        Box::new(RegexAstElements::Leaf(MatchingGroup::AcceptedState)),
+    );
 }
