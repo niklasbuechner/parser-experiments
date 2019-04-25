@@ -17,6 +17,19 @@ fn single_leaf() {
 }
 
 #[test]
+fn single_quoted_leaf() {
+    let regex = "\"|\"";
+    let tree = get_regex_syntax_tree(regex);
+
+    let expected_tree = RegexAstElements::Concatenation(
+        Box::new(RegexAstElements::Leaf(MatchingGroup::Character('|'))),
+        Box::new(RegexAstElements::Leaf(MatchingGroup::AcceptedState)),
+    );
+
+    assert_eq!(expected_tree, tree);
+}
+
+#[test]
 fn concatenation() {
     let regex = "ab";
     let tree = get_regex_syntax_tree(regex);
