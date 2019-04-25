@@ -371,12 +371,12 @@ fn get_character_group(characters: &[MatchingGroup]) -> CharacterGroupCalculatio
                     if negative_group {
                         return CharacterGroupCalculation::new(
                             MatchingGroup::NegativeGroup(group),
-                            index + 2,
+                            index,
                         );
                     } else {
                         return CharacterGroupCalculation::new(
                             MatchingGroup::Group(group),
-                            index + 2,
+                            index,
                         );
                     }
                 }
@@ -401,12 +401,12 @@ fn get_character_group(characters: &[MatchingGroup]) -> CharacterGroupCalculatio
                     if negative_group {
                         return CharacterGroupCalculation::new(
                             MatchingGroup::NegativeGroup(group),
-                            index + 2,
+                            index,
                         );
                     } else {
                         return CharacterGroupCalculation::new(
                             MatchingGroup::Group(group),
-                            index + 2,
+                            index,
                         );
                     }
                 }
@@ -433,12 +433,12 @@ fn get_character_group(characters: &[MatchingGroup]) -> CharacterGroupCalculatio
                     if negative_group {
                         return CharacterGroupCalculation::new(
                             MatchingGroup::NegativeGroup(group),
-                            index + 2,
+                            index,
                         );
                     } else {
                         return CharacterGroupCalculation::new(
                             MatchingGroup::Group(group),
-                            index + 2,
+                            index,
                         );
                     }
                 }

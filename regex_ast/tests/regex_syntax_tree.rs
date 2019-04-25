@@ -493,3 +493,42 @@ fn negative_character_group() {
     );
     assert_eq!(expected_tree, tree);
 }
+
+#[test]
+fn character_group_followed_by_concatenation() {
+    let regex = "[ab]c";
+    let tree = get_regex_syntax_tree(regex);
+
+    let expected_tree = RegexAstElements::Concatenation(
+        Box::new(RegexAstElements::Concatenation(
+            Box::new(RegexAstElements::Leaf(MatchingGroup::Group(vec![
+                MatchingGroupElements::Character('a'),
+                MatchingGroupElements::Character('b'),
+            ]))),
+            Box::new(RegexAstElements::Leaf(MatchingGroup::Character('c'))),
+        )),
+        Box::new(RegexAstElements::Leaf(MatchingGroup::AcceptedState)),
+    );
+    assert_eq!(expected_tree, tree);
+}
+
+#[test]
+fn character_group_within_multiple_concatenations() {
+    let regex = "a[bc]d";
+    let tree = get_regex_syntax_tree(regex);
+
+    let expected_tree = RegexAstElements::Concatenation(
+        Box::new(RegexAstElements::Concatenation(
+            Box::new(RegexAstElements::Concatenation(
+                Box::new(RegexAstElements::Leaf(MatchingGroup::Character('a'))),
+                Box::new(RegexAstElements::Leaf(MatchingGroup::Group(vec![
+                    MatchingGroupElements::Character('b'),
+                    MatchingGroupElements::Character('c'),
+                ]))),
+            )),
+            Box::new(RegexAstElements::Leaf(MatchingGroup::Character('d'))),
+        )),
+        Box::new(RegexAstElements::Leaf(MatchingGroup::AcceptedState)),
+    );
+    assert_eq!(expected_tree, tree);
+}
