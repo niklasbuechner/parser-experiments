@@ -1,6 +1,6 @@
-mod regex;
+mod parsing;
 
-pub use regex::get_regex_syntax_tree;
+pub use parsing::get_regex_syntax_tree;
 
 #[derive(Debug, PartialEq)]
 pub enum RegexAstElements {

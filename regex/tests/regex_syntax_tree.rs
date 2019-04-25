@@ -1,7 +1,7 @@
-use regex_ast::get_regex_syntax_tree;
-use regex_ast::MatchingGroup;
-use regex_ast::MatchingGroupElements;
-use regex_ast::RegexAstElements;
+use regex::get_regex_syntax_tree;
+use regex::MatchingGroup;
+use regex::MatchingGroupElements;
+use regex::RegexAstElements;
 
 #[test]
 fn single_leaf() {

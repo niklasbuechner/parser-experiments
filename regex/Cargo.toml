@@ -1,5 +1,5 @@
 [package]
-name = "regex_ast"
+name = "regex"
 version = "0.1.0"
 authors = ["Niklas Buechner <niklas.buechner@viison.com>"]
 edition = "2018"
