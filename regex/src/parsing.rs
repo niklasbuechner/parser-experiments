@@ -66,7 +66,7 @@ impl State {
 }
 
 pub fn get_regex_syntax_tree(regex: &str) -> RegexAstElements {
-    let mut stack = Vec::with_capacity(regex.len());
+    let mut stack = Vec::with_capacity(regex.len() + 1);
     let concatenation_list = calculate_concatenation_list(&mut stack, regex);
 
     return get_ast_for_concatenation_list(&stack, &concatenation_list.list);
