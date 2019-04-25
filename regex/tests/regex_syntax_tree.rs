@@ -116,9 +116,9 @@ fn zero_or_more_repetition() {
     let tree = get_regex_syntax_tree(regex);
 
     let expected_tree = RegexAstElements::Concatenation(
-        Box::new(RegexAstElements::ZeroOrMore(Box::new(RegexAstElements::Leaf(
-            MatchingGroup::Character('b'),
-        )))),
+        Box::new(RegexAstElements::ZeroOrMore(Box::new(
+            RegexAstElements::Leaf(MatchingGroup::Character('b')),
+        ))),
         Box::new(RegexAstElements::Leaf(MatchingGroup::AcceptedState)),
     );
     assert_eq!(expected_tree, tree);
@@ -445,9 +445,9 @@ fn character_group_with_range() {
     let tree = get_regex_syntax_tree(regex);
 
     let expected_tree = RegexAstElements::Concatenation(
-        Box::new(RegexAstElements::Leaf(MatchingGroup::Group(vec![MatchingGroupElements::Range(
-            'a', 'c',
-        )]))),
+        Box::new(RegexAstElements::Leaf(MatchingGroup::Group(vec![
+            MatchingGroupElements::Range('a', 'c'),
+        ]))),
         Box::new(RegexAstElements::Leaf(MatchingGroup::AcceptedState)),
     );
     assert_eq!(expected_tree, tree);
@@ -498,7 +498,7 @@ fn negative_character_group() {
     let tree = get_regex_syntax_tree(regex);
 
     let expected_tree = RegexAstElements::Concatenation(
-            Box::new(RegexAstElements::Leaf(MatchingGroup::NegativeGroup(vec![
+        Box::new(RegexAstElements::Leaf(MatchingGroup::NegativeGroup(vec![
             MatchingGroupElements::Character('a'),
             MatchingGroupElements::Character('b'),
         ]))),

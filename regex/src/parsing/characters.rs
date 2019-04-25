@@ -10,91 +10,83 @@ pub fn get_character_array(regex: &str) -> Vec<MatchingGroup> {
     for index in 0..input_characters.len() {
         let current_character = input_characters[index];
         match state {
-            0 => {
-                match current_character {
-                    '\\' => state = 1,
-                    _ => output_characters.push(MatchingGroup::Character(current_character)),
-                }
-            }
+            0 => match current_character {
+                '\\' => state = 1,
+                _ => output_characters.push(MatchingGroup::Character(current_character)),
+            },
             // The previous character was '\'
-            1 => {
-                match current_character {
-                    'r' => {
-                        output_characters.push(MatchingGroup::Character('\r'));
-                        state = 0;
-                    }
-                    'n' => {
-                        output_characters.push(MatchingGroup::Character('\n'));
-                        state = 0;
-                    }
-                    't' => {
-                        output_characters.push(MatchingGroup::Character('\t'));
-                        state = 0;
-                    }
-                    'x' => {
-                        state = 2;
-                    }
-                    '\\' => output_characters.push(MatchingGroup::Character('\\')),
-                    _ => {
-                        output_characters.push(MatchingGroup::Character('\\'));
-                        output_characters.push(MatchingGroup::Character(current_character));
-                    }
+            1 => match current_character {
+                'r' => {
+                    output_characters.push(MatchingGroup::Character('\r'));
+                    state = 0;
                 }
-            }
+                'n' => {
+                    output_characters.push(MatchingGroup::Character('\n'));
+                    state = 0;
+                }
+                't' => {
+                    output_characters.push(MatchingGroup::Character('\t'));
+                    state = 0;
+                }
+                'x' => {
+                    state = 2;
+                }
+                '\\' => output_characters.push(MatchingGroup::Character('\\')),
+                _ => {
+                    output_characters.push(MatchingGroup::Character('\\'));
+                    output_characters.push(MatchingGroup::Character(current_character));
+                }
+            },
             // The previous characters where `\x`
-            2 => {
-                match current_character {
-                    '0'..='9' | 'a'..='f' | 'A'..='F' => {
-                        first_hexa_character = current_character;
-                        state = 3;
-                    }
-                    '\\' => {
-                        output_characters.push(MatchingGroup::Character('\\'));
-                        output_characters.push(MatchingGroup::Character('x'));
-
-                        state = 1;
-                    }
-                    _ => {
-                        output_characters.push(MatchingGroup::Character('\\'));
-                        output_characters.push(MatchingGroup::Character('x'));
-                        output_characters.push(MatchingGroup::Character(current_character));
-                    }
+            2 => match current_character {
+                '0'..='9' | 'a'..='f' | 'A'..='F' => {
+                    first_hexa_character = current_character;
+                    state = 3;
                 }
-            }
+                '\\' => {
+                    output_characters.push(MatchingGroup::Character('\\'));
+                    output_characters.push(MatchingGroup::Character('x'));
+
+                    state = 1;
+                }
+                _ => {
+                    output_characters.push(MatchingGroup::Character('\\'));
+                    output_characters.push(MatchingGroup::Character('x'));
+                    output_characters.push(MatchingGroup::Character(current_character));
+                }
+            },
             // The previous characters where `\x` and a hex character
-            3 => {
-                match current_character {
-                    '0'..='9' | 'a'..='f' | 'A'..='F' => {
-                        let first_character_value = get_character_hex_value(first_hexa_character);
-                        let second_character_value = get_character_hex_value(current_character);
-                        let character_value = first_character_value * 16 + second_character_value;
+            3 => match current_character {
+                '0'..='9' | 'a'..='f' | 'A'..='F' => {
+                    let first_character_value = get_character_hex_value(first_hexa_character);
+                    let second_character_value = get_character_hex_value(current_character);
+                    let character_value = first_character_value * 16 + second_character_value;
 
-                        match char::try_from(character_value) {
-                            Ok(character) => {
-                                output_characters.push(MatchingGroup::Character(character))
-                            }
-                            Err(_) => panic!("Invalid hex character found"),
+                    match char::try_from(character_value) {
+                        Ok(character) => {
+                            output_characters.push(MatchingGroup::Character(character))
                         }
-
-                        state = 0;
+                        Err(_) => panic!("Invalid hex character found"),
                     }
-                    '\\' => {
-                        output_characters.push(MatchingGroup::Character('\\'));
-                        output_characters.push(MatchingGroup::Character('x'));
-                        output_characters.push(MatchingGroup::Character(first_hexa_character));
 
-                        state = 1;
-                    }
-                    _ => {
-                        output_characters.push(MatchingGroup::Character('\\'));
-                        output_characters.push(MatchingGroup::Character('x'));
-                        output_characters.push(MatchingGroup::Character(first_hexa_character));
-                        output_characters.push(MatchingGroup::Character(current_character));
-
-                        state = 0;
-                    }
+                    state = 0;
                 }
-            }
+                '\\' => {
+                    output_characters.push(MatchingGroup::Character('\\'));
+                    output_characters.push(MatchingGroup::Character('x'));
+                    output_characters.push(MatchingGroup::Character(first_hexa_character));
+
+                    state = 1;
+                }
+                _ => {
+                    output_characters.push(MatchingGroup::Character('\\'));
+                    output_characters.push(MatchingGroup::Character('x'));
+                    output_characters.push(MatchingGroup::Character(first_hexa_character));
+                    output_characters.push(MatchingGroup::Character(current_character));
+
+                    state = 0;
+                }
+            },
             _ => {}
         }
     }

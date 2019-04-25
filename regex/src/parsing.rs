@@ -1,10 +1,10 @@
 mod characters;
 
-use characters::get_character_array;
 use crate::ConcatenationList;
 use crate::MatchingGroup;
 use crate::MatchingGroupElements;
 use crate::State;
+use characters::get_character_array;
 use std::convert::From;
 
 impl From<MatchingGroup> for MatchingGroupElements {
@@ -31,7 +31,10 @@ impl CharacterGroupCalculation {
     }
 }
 
-pub (crate) fn calculate_concatenation_list(stack: &mut Vec<State>, regex: &str) -> ConcatenationList {
+pub(crate) fn calculate_concatenation_list(
+    stack: &mut Vec<State>,
+    regex: &str,
+) -> ConcatenationList {
     let regex_characters = get_character_array(regex);
     let mut character_is_in_quotes = false;
     let mut concatenation_list = Vec::new();
@@ -167,10 +170,7 @@ fn get_character_group(characters: &[MatchingGroup]) -> CharacterGroupCalculatio
                             index,
                         );
                     } else {
-                        return CharacterGroupCalculation::new(
-                            MatchingGroup::Group(group),
-                            index,
-                        );
+                        return CharacterGroupCalculation::new(MatchingGroup::Group(group), index);
                     }
                 }
                 'a'..='z' | '0'..='9' => {
@@ -197,10 +197,7 @@ fn get_character_group(characters: &[MatchingGroup]) -> CharacterGroupCalculatio
                             index,
                         );
                     } else {
-                        return CharacterGroupCalculation::new(
-                            MatchingGroup::Group(group),
-                            index,
-                        );
+                        return CharacterGroupCalculation::new(MatchingGroup::Group(group), index);
                     }
                 }
                 _ => {
@@ -229,10 +226,7 @@ fn get_character_group(characters: &[MatchingGroup]) -> CharacterGroupCalculatio
                             index,
                         );
                     } else {
-                        return CharacterGroupCalculation::new(
-                            MatchingGroup::Group(group),
-                            index,
-                        );
+                        return CharacterGroupCalculation::new(MatchingGroup::Group(group), index);
                     }
                 }
                 _ => {

@@ -1,6 +1,6 @@
-use crate::State;
-use crate::RegexAstElements;
 use crate::MatchingGroup;
+use crate::RegexAstElements;
+use crate::State;
 
 fn get_partial_ast_for_concatenation_list(
     stack: &Vec<State>,
@@ -101,7 +101,7 @@ fn get_partial_ast_for_concatenation_list(
     return ast;
 }
 
-pub (crate) fn get_ast_for_concatenation_list(
+pub(crate) fn get_ast_for_concatenation_list(
     stack: &Vec<State>,
     concatenation_list: &Vec<usize>,
 ) -> RegexAstElements {
