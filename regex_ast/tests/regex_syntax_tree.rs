@@ -265,7 +265,7 @@ fn line_breaks() {
 }
 
 #[test]
-fn backslack_at_end() {
+fn backslach_at_end() {
     let regex = "a\\";
     let tree = get_regex_syntax_tree(regex);
 
