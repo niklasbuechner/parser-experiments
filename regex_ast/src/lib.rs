@@ -286,8 +286,16 @@ fn get_character_array(regex: &str) -> Vec<MatchingGroup> {
         }
     }
 
-    if state != 0 {
+    if state > 0 {
         output_characters.push(MatchingGroup::Character('\\'));
+    }
+
+    if state > 1 {
+        output_characters.push(MatchingGroup::Character('x'));
+    }
+
+    if state == 3 {
+        output_characters.push(MatchingGroup::Character(first_hexa_character));
     }
 
     return output_characters;

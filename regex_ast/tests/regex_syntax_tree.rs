@@ -313,6 +313,21 @@ fn multiple_hexa_characters() {
 }
 
 #[test]
+fn incomplete_hexa_characters() {
+    let regex = "\\xf";
+    let tree = get_regex_syntax_tree(regex);
+
+    let expected_tree = RegexAstElements::Concatenation(
+        Box::new(RegexAstElements::Concatenation(
+            Box::new(RegexAstElements::Leaf(MatchingGroup::Character('\\'))),
+            Box::new(RegexAstElements::Leaf(MatchingGroup::Character('x'))),
+        )),
+        Box::new(RegexAstElements::Leaf(MatchingGroup::Character('f'))),
+    );
+    assert_eq!(expected_tree, tree);
+}
+
+#[test]
 fn character_group() {
     let regex = "[ab]";
     let tree = get_regex_syntax_tree(regex);
