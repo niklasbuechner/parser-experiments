@@ -198,7 +198,6 @@ fn get_character_array(regex: &str) -> Vec<MatchingGroup> {
         let current_character = input_characters[index];
         match state {
             0 => {
-                println!("0");
                 match current_character {
                     '\\' => state = 1,
                     _ => output_characters.push(MatchingGroup::Character(current_character)),
@@ -206,7 +205,6 @@ fn get_character_array(regex: &str) -> Vec<MatchingGroup> {
             }
             // The previous character was '\'
             1 => {
-                println!("1");
                 match current_character {
                     'r' => {
                         output_characters.push(MatchingGroup::Character('\r'));
@@ -232,7 +230,6 @@ fn get_character_array(regex: &str) -> Vec<MatchingGroup> {
             }
             // The previous characters where `\x`
             2 => {
-                println!("2");
                 match current_character {
                     '0'..='9' | 'a'..='f' | 'A'..='F' => {
                         first_hexa_character = current_character;
@@ -253,17 +250,14 @@ fn get_character_array(regex: &str) -> Vec<MatchingGroup> {
             }
             // The previous characters where `\x` and a hex character
             3 => {
-                println!("3");
                 match current_character {
                     '0'..='9' | 'a'..='f' | 'A'..='F' => {
                         let first_character_value = get_character_hex_value(first_hexa_character);
                         let second_character_value = get_character_hex_value(current_character);
                         let character_value = first_character_value * 16 + second_character_value;
-                        println!("{}", character_value);
 
                         match char::try_from(character_value) {
                             Ok(character) => {
-                                println!("Char: -{}-", character);
                                 output_characters.push(MatchingGroup::Character(character))
                             }
                             Err(_) => panic!("Invalid hex character found"),
