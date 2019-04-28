@@ -714,6 +714,26 @@ fn match_negative_character_group() {
 }
 
 #[test]
+fn match_empty_negative_character_group() {
+    let regex = "[^]";
+    let tree = get_regex_syntax_tree(regex);
+
+    let expected_tree = RegexAstElements::Concatenation(
+        Box::new(RegexAstElements::Leaf(MatchingGroup::NegativeGroup(
+            Vec::new(),
+        ))),
+        Box::new(RegexAstElements::Leaf(MatchingGroup::AcceptedState)),
+    );
+    assert_eq!(expected_tree, tree);
+
+    let regex_engine = get_regex_engine(regex);
+    assert_eq!(true, regex_engine.matches("c"));
+    assert_eq!(true, regex_engine.matches("f"));
+    assert_eq!(true, regex_engine.matches("a"));
+    assert_eq!(false, regex_engine.matches("ab"));
+}
+
+#[test]
 fn match_character_group_followed_by_concatenation() {
     let regex = "[ab]c";
     let tree = get_regex_syntax_tree(regex);
