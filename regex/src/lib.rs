@@ -135,6 +135,22 @@ impl RegexEngine {
                         return Some(i);
                     }
                 },
+                MatchingGroup::Group(ref elements) => {
+                    for element in elements {
+                        match element {
+                            MatchingGroupElements::Character(matching_character) => {
+                                if *matching_character == character {
+                                    return Some(i);
+                                }
+                            }
+                            MatchingGroupElements::Range(start_character, end_character) => {
+                                if *start_character <= character && *end_character >= character {
+                                    return Some(i);
+                                }
+                            }
+                        }
+                    }
+                }
                 MatchingGroup::AcceptedState => {},
                 _ => panic!("Matching group not yet implemented"),
             }

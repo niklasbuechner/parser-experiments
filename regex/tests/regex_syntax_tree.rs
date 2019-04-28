@@ -567,7 +567,7 @@ fn match_incomplete_hexa_characters() {
 }
 
 #[test]
-fn lex_character_group() {
+fn match_character_group() {
     let regex = "[ab]";
     let tree = get_regex_syntax_tree(regex);
 
@@ -579,10 +579,15 @@ fn lex_character_group() {
         Box::new(RegexAstElements::Leaf(MatchingGroup::AcceptedState)),
     );
     assert_eq!(expected_tree, tree);
+
+    let regex_engine = get_regex_engine(regex);
+    assert_eq!(true, regex_engine.matches("a"));
+    assert_eq!(true, regex_engine.matches("b"));
+    assert_eq!(false, regex_engine.matches("ab"));
 }
 
 #[test]
-fn lex_long_character_group() {
+fn match_long_character_group() {
     let regex = "[abcdef]";
     let tree = get_regex_syntax_tree(regex);
 
@@ -598,10 +603,19 @@ fn lex_long_character_group() {
         Box::new(RegexAstElements::Leaf(MatchingGroup::AcceptedState)),
     );
     assert_eq!(expected_tree, tree);
+
+    let regex_engine = get_regex_engine(regex);
+    assert_eq!(true, regex_engine.matches("a"));
+    assert_eq!(true, regex_engine.matches("b"));
+    assert_eq!(true, regex_engine.matches("c"));
+    assert_eq!(true, regex_engine.matches("d"));
+    assert_eq!(true, regex_engine.matches("e"));
+    assert_eq!(true, regex_engine.matches("f"));
+    assert_eq!(false, regex_engine.matches("abcdef"));
 }
 
 #[test]
-fn lex_character_group_with_range() {
+fn match_character_group_with_range() {
     let regex = "[a-c]";
     let tree = get_regex_syntax_tree(regex);
 
@@ -612,10 +626,16 @@ fn lex_character_group_with_range() {
         Box::new(RegexAstElements::Leaf(MatchingGroup::AcceptedState)),
     );
     assert_eq!(expected_tree, tree);
+
+    let regex_engine = get_regex_engine(regex);
+    assert_eq!(true, regex_engine.matches("a"));
+    assert_eq!(true, regex_engine.matches("b"));
+    assert_eq!(true, regex_engine.matches("c"));
+    assert_eq!(false, regex_engine.matches("ac"));
 }
 
 #[test]
-fn lex_character_group_only_looking_like_range() {
+fn match_character_group_only_looking_like_range() {
     let regex = "[a-]";
     let tree = get_regex_syntax_tree(regex);
 
@@ -627,10 +647,15 @@ fn lex_character_group_only_looking_like_range() {
         Box::new(RegexAstElements::Leaf(MatchingGroup::AcceptedState)),
     );
     assert_eq!(expected_tree, tree);
+
+    let regex_engine = get_regex_engine(regex);
+    assert_eq!(true, regex_engine.matches("a"));
+    assert_eq!(true, regex_engine.matches("-"));
+    assert_eq!(false, regex_engine.matches("a-"));
 }
 
 #[test]
-fn lex_character_group_with_other_symbols() {
+fn match_character_group_with_other_symbols() {
     let regex = "[a-*9#_&%$@!]";
     let tree = get_regex_syntax_tree(regex);
 
@@ -651,6 +676,20 @@ fn lex_character_group_with_other_symbols() {
         Box::new(RegexAstElements::Leaf(MatchingGroup::AcceptedState)),
     );
     assert_eq!(expected_tree, tree);
+
+    let regex_engine = get_regex_engine(regex);
+    assert_eq!(true, regex_engine.matches("a"));
+    assert_eq!(true, regex_engine.matches("-"));
+    assert_eq!(true, regex_engine.matches("*"));
+    assert_eq!(true, regex_engine.matches("9"));
+    assert_eq!(true, regex_engine.matches("#"));
+    assert_eq!(true, regex_engine.matches("_"));
+    assert_eq!(true, regex_engine.matches("&"));
+    assert_eq!(true, regex_engine.matches("%"));
+    assert_eq!(true, regex_engine.matches("$"));
+    assert_eq!(true, regex_engine.matches("@"));
+    assert_eq!(true, regex_engine.matches("!"));
+    assert_eq!(false, regex_engine.matches("a-*9#_&%$@!"));
 }
 
 #[test]
@@ -669,7 +708,7 @@ fn lex_negative_character_group() {
 }
 
 #[test]
-fn lex_character_group_followed_by_concatenation() {
+fn match_character_group_followed_by_concatenation() {
     let regex = "[ab]c";
     let tree = get_regex_syntax_tree(regex);
 
@@ -684,10 +723,16 @@ fn lex_character_group_followed_by_concatenation() {
         Box::new(RegexAstElements::Leaf(MatchingGroup::AcceptedState)),
     );
     assert_eq!(expected_tree, tree);
+
+    let regex_engine = get_regex_engine(regex);
+    assert_eq!(true, regex_engine.matches("ac"));
+    assert_eq!(true, regex_engine.matches("bc"));
+    assert_eq!(false, regex_engine.matches("abc"));
+    assert_eq!(false, regex_engine.matches(""));
 }
 
 #[test]
-fn lex_character_group_within_multiple_concatenations() {
+fn match_character_group_within_multiple_concatenations() {
     let regex = "a[bc]d";
     let tree = get_regex_syntax_tree(regex);
 
@@ -705,4 +750,10 @@ fn lex_character_group_within_multiple_concatenations() {
         Box::new(RegexAstElements::Leaf(MatchingGroup::AcceptedState)),
     );
     assert_eq!(expected_tree, tree);
+
+    let regex_engine = get_regex_engine(regex);
+    assert_eq!(true, regex_engine.matches("abd"));
+    assert_eq!(true, regex_engine.matches("acd"));
+    assert_eq!(false, regex_engine.matches("abcd"));
+    assert_eq!(false, regex_engine.matches("ad"));
 }
