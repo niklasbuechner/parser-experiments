@@ -23,7 +23,7 @@ fn matches_single_leaf() {
 }
 
 #[test]
-fn lex_single_quoted_leaf() {
+fn match_single_quoted_leaf() {
     let regex = "\"|\"";
     let tree = get_regex_syntax_tree(regex);
 
@@ -33,10 +33,15 @@ fn lex_single_quoted_leaf() {
     );
 
     assert_eq!(expected_tree, tree);
+
+    let regex_engine = get_regex_engine(regex);
+    assert_eq!(true, regex_engine.matches("|"));
+    assert_eq!(false, regex_engine.matches("a|"));
+    assert_eq!(false, regex_engine.matches("b"));
 }
 
 #[test]
-fn lex_concatenation() {
+fn match_concatenation() {
     let regex = "ab";
     let tree = get_regex_syntax_tree(regex);
 
@@ -48,10 +53,16 @@ fn lex_concatenation() {
         Box::new(RegexAstElements::Leaf(MatchingGroup::AcceptedState)),
     );
     assert_eq!(expected_tree, tree);
+
+    let regex_engine = get_regex_engine(regex);
+    assert_eq!(true, regex_engine.matches("ab"));
+    assert_eq!(false, regex_engine.matches("a"));
+    assert_eq!(false, regex_engine.matches("abc"));
+    assert_eq!(false, regex_engine.matches("ba"));
 }
 
 #[test]
-fn lex_multiple_concatenations() {
+fn match_multiple_concatenations() {
     let regex = "abc";
     let tree = get_regex_syntax_tree(regex);
 
@@ -66,10 +77,15 @@ fn lex_multiple_concatenations() {
         Box::new(RegexAstElements::Leaf(MatchingGroup::AcceptedState)),
     );
     assert_eq!(expected_tree, tree);
+
+    let regex_engine = get_regex_engine(regex);
+    assert_eq!(true, regex_engine.matches("abc"));
+    assert_eq!(false, regex_engine.matches("e"));
+    assert_eq!(false, regex_engine.matches("abcd"));
 }
 
 #[test]
-fn lex_alternation() {
+fn match_alternation() {
     let regex = "ab|cd";
     let tree = get_regex_syntax_tree(regex);
 
@@ -87,10 +103,16 @@ fn lex_alternation() {
         Box::new(RegexAstElements::Leaf(MatchingGroup::AcceptedState)),
     );
     assert_eq!(expected_tree, tree);
+
+    let regex_engine = get_regex_engine(regex);
+    assert_eq!(true, regex_engine.matches("ab"));
+    assert_eq!(true, regex_engine.matches("cd"));
+    assert_eq!(false, regex_engine.matches("bc"));
+    assert_eq!(false, regex_engine.matches("abcd"));
 }
 
 #[test]
-fn lex_multiple_alternations() {
+fn match_multiple_alternations() {
     let regex = "ab|cd|ef";
     let tree = get_regex_syntax_tree(regex);
 
@@ -114,10 +136,18 @@ fn lex_multiple_alternations() {
         Box::new(RegexAstElements::Leaf(MatchingGroup::AcceptedState)),
     );
     assert_eq!(expected_tree, tree);
+
+    let regex_engine = get_regex_engine(regex);
+    assert_eq!(true, regex_engine.matches("ab"));
+    assert_eq!(true, regex_engine.matches("cd"));
+    assert_eq!(true, regex_engine.matches("ef"));
+    assert_eq!(false, regex_engine.matches("bc"));
+    assert_eq!(false, regex_engine.matches("abcdef"));
+    assert_eq!(false, regex_engine.matches("abcd"));
 }
 
 #[test]
-fn lex_zero_or_more_repetition() {
+fn match_zero_or_more_repetition() {
     let regex = "b*";
     let tree = get_regex_syntax_tree(regex);
 
@@ -128,10 +158,18 @@ fn lex_zero_or_more_repetition() {
         Box::new(RegexAstElements::Leaf(MatchingGroup::AcceptedState)),
     );
     assert_eq!(expected_tree, tree);
+
+    let regex_engine = get_regex_engine(regex);
+    assert_eq!(true, regex_engine.matches("b"));
+    assert_eq!(true, regex_engine.matches("bb"));
+    assert_eq!(true, regex_engine.matches("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"));
+    assert_eq!(false, regex_engine.matches("a"));
+    assert_eq!(false, regex_engine.matches("bbbba"));
+    assert_eq!(true, regex_engine.matches(""));
 }
 
 #[test]
-fn lex_zero_or_more_repetition_with_noise() {
+fn match_zero_or_more_repetition_with_noise() {
     let regex = "ab*";
     let tree = get_regex_syntax_tree(regex);
 
@@ -145,6 +183,13 @@ fn lex_zero_or_more_repetition_with_noise() {
         Box::new(RegexAstElements::Leaf(MatchingGroup::AcceptedState)),
     );
     assert_eq!(expected_tree, tree);
+
+    let regex_engine = get_regex_engine(regex);
+    assert_eq!(true, regex_engine.matches("a"));
+    assert_eq!(true, regex_engine.matches("ab"));
+    assert_eq!(true, regex_engine.matches("abbbbbbbbbbbbbbb"));
+    assert_eq!(false, regex_engine.matches("b"));
+    assert_eq!(false, regex_engine.matches(""));
 }
 
 #[test]

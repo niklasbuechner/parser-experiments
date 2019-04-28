@@ -81,7 +81,7 @@ impl State {
 
 pub struct RegexEngine {
     matching_groups: Vec<MatchingGroup>,
-    transitions: HashMap<usize, HashMap<usize, (usize, bool)>>,
+    transitions: HashMap<usize, (HashMap<usize, usize>, bool)>,
 }
 impl RegexEngine {
     pub(crate) fn new(ast: &RegexAstElements) -> Self {
@@ -90,7 +90,7 @@ impl RegexEngine {
 
     pub(crate) fn new_with_values(
         matching_groups: Vec<MatchingGroup>,
-        transitions: HashMap<usize, HashMap<usize, (usize, bool)>>,
+        transitions: HashMap<usize, (HashMap<usize, usize>, bool)>,
     ) -> Self {
         RegexEngine {
             matching_groups,
@@ -100,11 +100,10 @@ impl RegexEngine {
 
     pub fn matches(&self, string: &str) -> bool {
         let mut current_state = 0;
-        let mut is_accepted_state = false;
         let characters: Vec<char> = string.chars().collect();
 
         for character in characters {
-            let matching_group_transitions = match self.transitions.get(&current_state) {
+            let (matching_group_transitions, _) = match self.transitions.get(&current_state) {
                 Some(transitions) => transitions,
                 None => return false,
             };
@@ -115,15 +114,17 @@ impl RegexEngine {
             };
 
             match matching_group_transitions.get(&matching_group_index) {
-                Some((new_state, is_accepted)) => {
+                Some(new_state) => {
                     current_state = *new_state;
-                    is_accepted_state = *is_accepted;
                 },
                 None => return false,
             }
         }
 
-        return is_accepted_state;
+        match self.transitions.get(&current_state) {
+            Some((_, is_accepted)) => return *is_accepted,
+            None => return false,
+        }
     }
 
     fn get_matching_group_index(&self, character: char) -> Option<usize> {

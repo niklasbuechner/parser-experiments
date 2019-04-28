@@ -5,8 +5,10 @@ use std::collections::HashMap;
 
 #[derive(Debug, PartialEq)]
 enum ElementType {
+    Alternation,
     Concatenation,
     Leaf,
+    ZeroOrMore,
 }
 
 #[derive(Debug, PartialEq)]
@@ -102,6 +104,27 @@ impl StateMachineBuilder {
         let is_accepted_state;
 
         match ast {
+            RegexAstElements::Alternation(ref left, ref right) => {
+                element_type = ElementType::Alternation;
+
+                let left_index = self.create_calculation_stack_for_element(left);
+                let right_index = self.create_calculation_stack_for_element(right);
+
+                current_index = self.stack.len();
+                self.stack[left_index].parent_index = Some(current_index);
+                self.stack[right_index].parent_index = Some(current_index);
+
+                left_child_index = Some(left_index);
+                right_child_index = Some(right_index);
+
+                is_nullable =
+                    self.stack[left_index].is_nullable || self.stack[right_index].is_nullable;
+                first_pos = self.stack[left_index].first_pos.clone();
+                first_pos.append(&mut self.stack[right_index].first_pos.clone());
+                last_pos = self.stack[right_index].last_pos.clone();
+                last_pos.append(&mut self.stack[left_index].last_pos.clone());
+                is_accepted_state = false;
+            }
             RegexAstElements::Concatenation(ref left, ref right) => {
                 element_type = ElementType::Concatenation;
 
@@ -136,6 +159,21 @@ impl StateMachineBuilder {
                 first_pos = vec![current_index];
                 last_pos = vec![current_index];
                 is_accepted_state = group == &MatchingGroup::AcceptedState;
+            }
+            RegexAstElements::ZeroOrMore(ref child) => {
+                element_type = ElementType::ZeroOrMore;
+
+                let child_index = self.create_calculation_stack_for_element(child);
+
+                current_index = self.stack.len();
+                self.stack[child_index].parent_index = Some(current_index);
+
+                left_child_index = Some(child_index);
+
+                is_nullable = true;
+                first_pos = self.stack[child_index].first_pos.clone();
+                last_pos = self.stack[child_index].last_pos.clone();
+                is_accepted_state = false;
             }
             _ => panic!("Unknown ast element"),
         }
@@ -172,13 +210,27 @@ impl StateMachineBuilder {
                             .append(&mut first_pos_right.clone());
                     }
                 }
+                ElementType::ZeroOrMore => {
+                    let last_pos_child = &self.stack[self.stack[i].left_child_index.unwrap()]
+                        .last_pos
+                        .clone();
+                    let first_pos_child = &self.stack[self.stack[i].left_child_index.unwrap()]
+                        .first_pos
+                        .clone();
+
+                    for position in last_pos_child {
+                        self.stack[*position]
+                            .follow_pos
+                            .append(&mut first_pos_child.clone())
+                    }
+                }
                 _ => {}
             }
         }
     }
 
     fn convert_to_regex_engine(self) -> RegexEngine {
-        let mut deterministic_transitions: HashMap<usize, HashMap<usize, (usize, bool)>> = HashMap::new();
+        let mut deterministic_transitions: HashMap<usize, (HashMap<usize, usize>, bool)> = HashMap::new();
         let mut deterministic_states = Vec::with_capacity(100);
         let tree_root = &self.stack[self.stack.len() - 1];
         deterministic_states.push(DeterministicState::new(0, tree_root.first_pos.clone()));
@@ -197,21 +249,35 @@ impl StateMachineBuilder {
                 }
 
                 if transition.len() != 0 {
-                    let is_accepted = self.contains_accepting_states(&transition);
                     let state_id = self.get_state_id(&mut deterministic_states, transition);
 
                     match deterministic_transitions.get_mut(&unmarked_state_index) {
-                        Some(ref mut transitions) => {
-                            transitions.insert(matching_group_index, (state_id, is_accepted));
+                        Some((transitions, _)) => {
+                            transitions.insert(matching_group_index, state_id);
                         }
                         None => {
-                            let mut transition_map: HashMap<usize, (usize, bool)> = HashMap::with_capacity(10);
-                            transition_map.insert(matching_group_index, (state_id, is_accepted));
+                            let mut transition_map: HashMap<usize, usize> = HashMap::with_capacity(10);
+                            transition_map.insert(matching_group_index, state_id);
 
-                            deterministic_transitions.insert(unmarked_state_index, transition_map);
+                            let is_accepted = self.contains_accepting_states(
+                                &deterministic_states[unmarked_state_index].non_deterministic_states
+                            );
+                            deterministic_transitions.insert(unmarked_state_index, (transition_map, is_accepted));
                         }
                     }
                 }
+            }
+        }
+
+        for index in 0..deterministic_states.len() {
+            match deterministic_transitions.get(&index) {
+                None => {
+                    let is_accepted = self.contains_accepting_states(
+                        &deterministic_states[index].non_deterministic_states
+                    );
+                    deterministic_transitions.insert(index, (HashMap::new(), is_accepted));
+                }
+                _ => {}
             }
         }
 
