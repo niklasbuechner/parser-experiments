@@ -246,7 +246,7 @@ fn match_zero_or_one_repetition_with_noise() {
 }
 
 #[test]
-fn lex_one_or_more_repetition() {
+fn match_one_or_more_repetition() {
     let regex = "ab+";
     let tree = get_regex_syntax_tree(regex);
 
@@ -263,6 +263,12 @@ fn lex_one_or_more_repetition() {
         Box::new(RegexAstElements::Leaf(MatchingGroup::AcceptedState)),
     );
     assert_eq!(expected_tree, tree);
+
+    let regex_engine = get_regex_engine(regex);
+    assert_eq!(true, regex_engine.matches("ab"));
+    assert_eq!(true, regex_engine.matches("abbbbbbbbbbbbbbb"));
+    assert_eq!(false, regex_engine.matches("a"));
+    assert_eq!(false, regex_engine.matches(""));
 }
 
 #[test]
@@ -281,10 +287,15 @@ fn lex_escaped_plus_operator_through_quotes() {
         Box::new(RegexAstElements::Leaf(MatchingGroup::AcceptedState)),
     );
     assert_eq!(expected_tree, tree);
+
+    let regex_engine = get_regex_engine(regex);
+    assert_eq!(true, regex_engine.matches("ab+"));
+    assert_eq!(false, regex_engine.matches("ab"));
+    assert_eq!(false, regex_engine.matches("abb"));
 }
 
 #[test]
-fn lex_escaped_concatenation_in_quotes() {
+fn match_escaped_concatenation_in_quotes() {
     let regex = "\"a+?\"";
     let tree = get_regex_syntax_tree(regex);
 
@@ -299,10 +310,17 @@ fn lex_escaped_concatenation_in_quotes() {
         Box::new(RegexAstElements::Leaf(MatchingGroup::AcceptedState)),
     );
     assert_eq!(expected_tree, tree);
+
+    let regex_engine = get_regex_engine(regex);
+    assert_eq!(true, regex_engine.matches("a+?"));
+    assert_eq!(false, regex_engine.matches("aaab"));
+    assert_eq!(false, regex_engine.matches("a"));
+    assert_eq!(false, regex_engine.matches("a?"));
+    assert_eq!(false, regex_engine.matches("+?"));
 }
 
 #[test]
-fn lex_escaped_concatenation_in_quotes_followed_by_normal_regex() {
+fn match_escaped_concatenation_in_quotes_followed_by_normal_regex() {
     let regex = "\"a+?\"a?";
     let tree = get_regex_syntax_tree(regex);
 
@@ -322,10 +340,18 @@ fn lex_escaped_concatenation_in_quotes_followed_by_normal_regex() {
         Box::new(RegexAstElements::Leaf(MatchingGroup::AcceptedState)),
     );
     assert_eq!(expected_tree, tree);
+
+    let regex_engine = get_regex_engine(regex);
+    assert_eq!(true, regex_engine.matches("a+?"));
+    assert_eq!(true, regex_engine.matches("a+?a"));
+    assert_eq!(false, regex_engine.matches("aaab"));
+    assert_eq!(false, regex_engine.matches("a"));
+    assert_eq!(false, regex_engine.matches("a?a"));
+    assert_eq!(false, regex_engine.matches("+?a"));
 }
 
 #[test]
-fn lex_group() {
+fn match_group() {
     let regex = "a(bc)d";
     let tree = get_regex_syntax_tree(regex);
 
@@ -343,10 +369,17 @@ fn lex_group() {
         Box::new(RegexAstElements::Leaf(MatchingGroup::AcceptedState)),
     );
     assert_eq!(expected_tree, tree);
+
+    let regex_engine = get_regex_engine(regex);
+    assert_eq!(true, regex_engine.matches("abcd"));
+    assert_eq!(false, regex_engine.matches("abd"));
+    assert_eq!(false, regex_engine.matches("acd"));
+    assert_eq!(false, regex_engine.matches("ad"));
+    assert_eq!(false, regex_engine.matches(""));
 }
 
 #[test]
-fn lex_group_with_alternation() {
+fn match_group_with_alternation() {
     let regex = "a(b|c)";
     let tree = get_regex_syntax_tree(regex);
 
@@ -361,10 +394,16 @@ fn lex_group_with_alternation() {
         Box::new(RegexAstElements::Leaf(MatchingGroup::AcceptedState)),
     );
     assert_eq!(expected_tree, tree);
+
+    let regex_engine = get_regex_engine(regex);
+    assert_eq!(true, regex_engine.matches("ab"));
+    assert_eq!(true, regex_engine.matches("ac"));
+    assert_eq!(false, regex_engine.matches("abc"));
+    assert_eq!(false, regex_engine.matches("a"));
 }
 
 #[test]
-fn lex_multiple_groups_with_multiple_alternations() {
+fn match_multiple_groups_with_multiple_alternations() {
     let regex = "a(b(cd|e)|fg*)h";
     let tree = get_regex_syntax_tree(regex);
 
@@ -397,10 +436,19 @@ fn lex_multiple_groups_with_multiple_alternations() {
     );
 
     assert_eq!(expected_tree, tree);
+
+    let regex_engine = get_regex_engine(regex);
+    assert_eq!(true, regex_engine.matches("afh"));
+    assert_eq!(true, regex_engine.matches("afgh"));
+    assert_eq!(true, regex_engine.matches("afggggggggggggh"));
+    assert_eq!(true, regex_engine.matches("abeh"));
+    assert_eq!(true, regex_engine.matches("abcdh"));
+    assert_eq!(false, regex_engine.matches("abcdeh"));
+    assert_eq!(false, regex_engine.matches("abfgh"));
 }
 
 #[test]
-fn lex_line_breaks() {
+fn match_line_breaks() {
     let regex = "a\\n";
     let tree = get_regex_syntax_tree(regex);
 
@@ -412,10 +460,14 @@ fn lex_line_breaks() {
         Box::new(RegexAstElements::Leaf(MatchingGroup::AcceptedState)),
     );
     assert_eq!(expected_tree, tree);
+
+    let regex_engine = get_regex_engine(regex);
+    assert_eq!(true, regex_engine.matches("a\n"));
+    assert_eq!(false, regex_engine.matches("a "));
 }
 
 #[test]
-fn lex_backslach_at_end() {
+fn match_backslach_at_end() {
     let regex = "a\\";
     let tree = get_regex_syntax_tree(regex);
 
@@ -427,10 +479,15 @@ fn lex_backslach_at_end() {
         Box::new(RegexAstElements::Leaf(MatchingGroup::AcceptedState)),
     );
     assert_eq!(expected_tree, tree);
+
+    let regex_engine = get_regex_engine(regex);
+    assert_eq!(true, regex_engine.matches("a\\"));
+    assert_eq!(false, regex_engine.matches("a\""));
+    assert_eq!(false, regex_engine.matches("\\"));
 }
 
 #[test]
-fn lex_line_break_after_backslash() {
+fn match_line_break_after_backslash() {
     let regex = "a\\\\n";
     let tree = get_regex_syntax_tree(regex);
 
@@ -445,10 +502,15 @@ fn lex_line_break_after_backslash() {
         Box::new(RegexAstElements::Leaf(MatchingGroup::AcceptedState)),
     );
     assert_eq!(expected_tree, tree);
+
+    let regex_engine = get_regex_engine(regex);
+    assert_eq!(true, regex_engine.matches("a\\\n"));
+    assert_eq!(false, regex_engine.matches("a\\"));
+    assert_eq!(false, regex_engine.matches("a\\\\n"));
 }
 
 #[test]
-fn lex_hexa_characters() {
+fn match_hexa_characters() {
     let regex = "\\xff";
     let tree = get_regex_syntax_tree(regex);
 
@@ -457,10 +519,14 @@ fn lex_hexa_characters() {
         Box::new(RegexAstElements::Leaf(MatchingGroup::AcceptedState)),
     );
     assert_eq!(expected_tree, tree);
+
+    let regex_engine = get_regex_engine(regex);
+    assert_eq!(true, regex_engine.matches("ÿ"));
+    assert_eq!(false, regex_engine.matches("\\xff"));
 }
 
 #[test]
-fn lex_multiple_hexa_characters() {
+fn match_multiple_hexa_characters() {
     let regex = "\\xff\\xff";
     let tree = get_regex_syntax_tree(regex);
 
@@ -472,10 +538,14 @@ fn lex_multiple_hexa_characters() {
         Box::new(RegexAstElements::Leaf(MatchingGroup::AcceptedState)),
     );
     assert_eq!(expected_tree, tree);
+
+    let regex_engine = get_regex_engine(regex);
+    assert_eq!(true, regex_engine.matches("ÿÿ"));
+    assert_eq!(false, regex_engine.matches("\\xff\\xff"));
 }
 
 #[test]
-fn lex_incomplete_hexa_characters() {
+fn match_incomplete_hexa_characters() {
     let regex = "\\xf";
     let tree = get_regex_syntax_tree(regex);
 
@@ -490,6 +560,10 @@ fn lex_incomplete_hexa_characters() {
         Box::new(RegexAstElements::Leaf(MatchingGroup::AcceptedState)),
     );
     assert_eq!(expected_tree, tree);
+
+    let regex_engine = get_regex_engine(regex);
+    assert_eq!(true, regex_engine.matches("\\xf"));
+    assert_eq!(false, regex_engine.matches("ÿ"));
 }
 
 #[test]
