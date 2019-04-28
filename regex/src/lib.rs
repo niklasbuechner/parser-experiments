@@ -1,8 +1,11 @@
 mod ast;
 mod parsing;
+mod state_machine;
 
 use ast::get_ast_for_concatenation_list;
 use parsing::calculate_concatenation_list;
+use state_machine::create_state_machine;
+use state_machine::StateMachine;
 
 #[derive(Debug, PartialEq)]
 pub enum RegexAstElements {
@@ -76,9 +79,28 @@ impl State {
     }
 }
 
+pub struct RegexEngine {
+    state_machine: StateMachine,
+}
+impl RegexEngine {
+    pub(crate) fn new(state_machine: StateMachine) -> Self {
+        RegexEngine { state_machine }
+    }
+
+    pub fn matches(&self, _string: &str) -> bool {
+        return false;
+    }
+}
+
 pub fn get_regex_syntax_tree(regex: &str) -> RegexAstElements {
     let mut stack = Vec::with_capacity(regex.len() + 1);
     let concatenation_list = calculate_concatenation_list(&mut stack, regex);
 
     return get_ast_for_concatenation_list(&stack, &concatenation_list.list);
+}
+
+pub fn get_regex_engine(regex: &str) -> RegexEngine {
+    let ast = get_regex_syntax_tree(regex);
+
+    return RegexEngine::new(create_state_machine(&ast));
 }

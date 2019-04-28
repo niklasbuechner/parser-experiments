@@ -1,10 +1,11 @@
+use regex::get_regex_engine;
 use regex::get_regex_syntax_tree;
 use regex::MatchingGroup;
 use regex::MatchingGroupElements;
 use regex::RegexAstElements;
 
 #[test]
-fn single_leaf() {
+fn matches_single_leaf() {
     let regex = "a";
     let tree = get_regex_syntax_tree(regex);
 
@@ -14,10 +15,13 @@ fn single_leaf() {
     );
 
     assert_eq!(expected_tree, tree);
+
+    let regex_engine = get_regex_engine(regex);
+    assert_eq!(true, regex_engine.matches("a"));
 }
 
 #[test]
-fn single_quoted_leaf() {
+fn lex_single_quoted_leaf() {
     let regex = "\"|\"";
     let tree = get_regex_syntax_tree(regex);
 
@@ -30,7 +34,7 @@ fn single_quoted_leaf() {
 }
 
 #[test]
-fn concatenation() {
+fn lex_concatenation() {
     let regex = "ab";
     let tree = get_regex_syntax_tree(regex);
 
@@ -45,7 +49,7 @@ fn concatenation() {
 }
 
 #[test]
-fn multiple_concatenations() {
+fn lex_multiple_concatenations() {
     let regex = "abc";
     let tree = get_regex_syntax_tree(regex);
 
@@ -63,7 +67,7 @@ fn multiple_concatenations() {
 }
 
 #[test]
-fn alternation() {
+fn lex_alternation() {
     let regex = "ab|cd";
     let tree = get_regex_syntax_tree(regex);
 
@@ -84,7 +88,7 @@ fn alternation() {
 }
 
 #[test]
-fn multiple_alternations() {
+fn lex_multiple_alternations() {
     let regex = "ab|cd|ef";
     let tree = get_regex_syntax_tree(regex);
 
@@ -111,7 +115,7 @@ fn multiple_alternations() {
 }
 
 #[test]
-fn zero_or_more_repetition() {
+fn lex_zero_or_more_repetition() {
     let regex = "b*";
     let tree = get_regex_syntax_tree(regex);
 
@@ -125,7 +129,7 @@ fn zero_or_more_repetition() {
 }
 
 #[test]
-fn zero_or_more_repetition_with_noise() {
+fn lex_zero_or_more_repetition_with_noise() {
     let regex = "ab*";
     let tree = get_regex_syntax_tree(regex);
 
@@ -142,7 +146,7 @@ fn zero_or_more_repetition_with_noise() {
 }
 
 #[test]
-fn zero_or_one_repetition() {
+fn lex_zero_or_one_repetition() {
     let regex = "ab?";
     let tree = get_regex_syntax_tree(regex);
 
@@ -159,7 +163,7 @@ fn zero_or_one_repetition() {
 }
 
 #[test]
-fn one_or_more_repetition() {
+fn lex_one_or_more_repetition() {
     let regex = "ab+";
     let tree = get_regex_syntax_tree(regex);
 
@@ -179,7 +183,7 @@ fn one_or_more_repetition() {
 }
 
 #[test]
-fn escaped_plus_operator_through_quotes() {
+fn lex_escaped_plus_operator_through_quotes() {
     let regex = "ab\"+\"";
     let tree = get_regex_syntax_tree(regex);
 
@@ -197,7 +201,7 @@ fn escaped_plus_operator_through_quotes() {
 }
 
 #[test]
-fn escaped_concatenation_in_quotes() {
+fn lex_escaped_concatenation_in_quotes() {
     let regex = "\"a+?\"";
     let tree = get_regex_syntax_tree(regex);
 
@@ -215,7 +219,7 @@ fn escaped_concatenation_in_quotes() {
 }
 
 #[test]
-fn escaped_concatenation_in_quotes_followed_by_normal_regex() {
+fn lex_escaped_concatenation_in_quotes_followed_by_normal_regex() {
     let regex = "\"a+?\"a?";
     let tree = get_regex_syntax_tree(regex);
 
@@ -238,7 +242,7 @@ fn escaped_concatenation_in_quotes_followed_by_normal_regex() {
 }
 
 #[test]
-fn group() {
+fn lex_group() {
     let regex = "a(bc)d";
     let tree = get_regex_syntax_tree(regex);
 
@@ -259,7 +263,7 @@ fn group() {
 }
 
 #[test]
-fn group_with_alternation() {
+fn lex_group_with_alternation() {
     let regex = "a(b|c)";
     let tree = get_regex_syntax_tree(regex);
 
@@ -277,7 +281,7 @@ fn group_with_alternation() {
 }
 
 #[test]
-fn multiple_groups_with_multiple_alternations() {
+fn lex_multiple_groups_with_multiple_alternations() {
     let regex = "a(b(cd|e)|fg*)h";
     let tree = get_regex_syntax_tree(regex);
 
@@ -313,7 +317,7 @@ fn multiple_groups_with_multiple_alternations() {
 }
 
 #[test]
-fn line_breaks() {
+fn lex_line_breaks() {
     let regex = "a\\n";
     let tree = get_regex_syntax_tree(regex);
 
@@ -328,7 +332,7 @@ fn line_breaks() {
 }
 
 #[test]
-fn backslach_at_end() {
+fn lex_backslach_at_end() {
     let regex = "a\\";
     let tree = get_regex_syntax_tree(regex);
 
@@ -343,7 +347,7 @@ fn backslach_at_end() {
 }
 
 #[test]
-fn line_break_after_backslash() {
+fn lex_line_break_after_backslash() {
     let regex = "a\\\\n";
     let tree = get_regex_syntax_tree(regex);
 
@@ -361,7 +365,7 @@ fn line_break_after_backslash() {
 }
 
 #[test]
-fn hexa_characters() {
+fn lex_hexa_characters() {
     let regex = "\\xff";
     let tree = get_regex_syntax_tree(regex);
 
@@ -373,7 +377,7 @@ fn hexa_characters() {
 }
 
 #[test]
-fn multiple_hexa_characters() {
+fn lex_multiple_hexa_characters() {
     let regex = "\\xff\\xff";
     let tree = get_regex_syntax_tree(regex);
 
@@ -388,7 +392,7 @@ fn multiple_hexa_characters() {
 }
 
 #[test]
-fn incomplete_hexa_characters() {
+fn lex_incomplete_hexa_characters() {
     let regex = "\\xf";
     let tree = get_regex_syntax_tree(regex);
 
@@ -406,7 +410,7 @@ fn incomplete_hexa_characters() {
 }
 
 #[test]
-fn character_group() {
+fn lex_character_group() {
     let regex = "[ab]";
     let tree = get_regex_syntax_tree(regex);
 
@@ -421,7 +425,7 @@ fn character_group() {
 }
 
 #[test]
-fn long_character_group() {
+fn lex_long_character_group() {
     let regex = "[abcdef]";
     let tree = get_regex_syntax_tree(regex);
 
@@ -440,7 +444,7 @@ fn long_character_group() {
 }
 
 #[test]
-fn character_group_with_range() {
+fn lex_character_group_with_range() {
     let regex = "[a-c]";
     let tree = get_regex_syntax_tree(regex);
 
@@ -454,7 +458,7 @@ fn character_group_with_range() {
 }
 
 #[test]
-fn character_group_only_looking_like_range() {
+fn lex_character_group_only_looking_like_range() {
     let regex = "[a-]";
     let tree = get_regex_syntax_tree(regex);
 
@@ -469,7 +473,7 @@ fn character_group_only_looking_like_range() {
 }
 
 #[test]
-fn character_group_with_other_symbols() {
+fn lex_character_group_with_other_symbols() {
     let regex = "[a-*9#_&%$@!]";
     let tree = get_regex_syntax_tree(regex);
 
@@ -493,7 +497,7 @@ fn character_group_with_other_symbols() {
 }
 
 #[test]
-fn negative_character_group() {
+fn lex_negative_character_group() {
     let regex = "[^ab]";
     let tree = get_regex_syntax_tree(regex);
 
@@ -508,7 +512,7 @@ fn negative_character_group() {
 }
 
 #[test]
-fn character_group_followed_by_concatenation() {
+fn lex_character_group_followed_by_concatenation() {
     let regex = "[ab]c";
     let tree = get_regex_syntax_tree(regex);
 
@@ -526,7 +530,7 @@ fn character_group_followed_by_concatenation() {
 }
 
 #[test]
-fn character_group_within_multiple_concatenations() {
+fn lex_character_group_within_multiple_concatenations() {
     let regex = "a[bc]d";
     let tree = get_regex_syntax_tree(regex);
 
