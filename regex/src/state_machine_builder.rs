@@ -246,18 +246,22 @@ impl StateMachineBuilder {
     }
 
     fn convert_to_regex_engine(self) -> RegexEngine {
-        let mut deterministic_transitions: HashMap<usize, (HashMap<usize, usize>, bool)> = HashMap::new();
+        let mut deterministic_transitions: HashMap<usize, (HashMap<usize, usize>, bool)> =
+            HashMap::new();
         let mut deterministic_states = Vec::with_capacity(100);
         let tree_root = &self.stack[self.stack.len() - 1];
         deterministic_states.push(DeterministicState::new(0, tree_root.first_pos.clone()));
 
-        while let Some(unmarked_state_index) = self.get_next_unmarked_state_index(&deterministic_states) {
+        while let Some(unmarked_state_index) =
+            self.get_next_unmarked_state_index(&deterministic_states)
+        {
             deterministic_states[unmarked_state_index].is_marked = true;
 
             for matching_group_index in 0..self.matching_groups.len() {
                 let mut transition = Vec::new();
 
-                for position in &deterministic_states[unmarked_state_index].non_deterministic_states {
+                for position in &deterministic_states[unmarked_state_index].non_deterministic_states
+                {
                     let non_deterministic_state = &self.stack[position.clone()];
                     if non_deterministic_state.matching_group_index == Some(matching_group_index) {
                         transition.append(&mut non_deterministic_state.follow_pos.clone());
@@ -272,13 +276,16 @@ impl StateMachineBuilder {
                             transitions.insert(matching_group_index, state_id);
                         }
                         None => {
-                            let mut transition_map: HashMap<usize, usize> = HashMap::with_capacity(10);
+                            let mut transition_map: HashMap<usize, usize> =
+                                HashMap::with_capacity(10);
                             transition_map.insert(matching_group_index, state_id);
 
                             let is_accepted = self.contains_accepting_states(
-                                &deterministic_states[unmarked_state_index].non_deterministic_states
+                                &deterministic_states[unmarked_state_index]
+                                    .non_deterministic_states,
                             );
-                            deterministic_transitions.insert(unmarked_state_index, (transition_map, is_accepted));
+                            deterministic_transitions
+                                .insert(unmarked_state_index, (transition_map, is_accepted));
                         }
                     }
                 }
@@ -289,7 +296,7 @@ impl StateMachineBuilder {
             match deterministic_transitions.get(&index) {
                 None => {
                     let is_accepted = self.contains_accepting_states(
-                        &deterministic_states[index].non_deterministic_states
+                        &deterministic_states[index].non_deterministic_states,
                     );
                     deterministic_transitions.insert(index, (HashMap::new(), is_accepted));
                 }

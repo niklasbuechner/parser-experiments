@@ -116,7 +116,7 @@ impl RegexEngine {
             match matching_group_transitions.get(&matching_group_index) {
                 Some(new_state) => {
                     current_state = *new_state;
-                },
+                }
                 None => return false,
             }
         }
@@ -130,12 +130,12 @@ impl RegexEngine {
     fn get_matching_group_index(&self, character: char) -> Option<usize> {
         for i in 0..self.matching_groups.len() {
             match &self.matching_groups[i] {
-                MatchingGroup::AcceptedState => {},
+                MatchingGroup::AcceptedState => {}
                 MatchingGroup::Character(matching_character) => {
                     if *matching_character == character {
                         return Some(i);
                     }
-                },
+                }
                 MatchingGroup::Group(ref elements) => {
                     for element in elements {
                         match element {
@@ -169,7 +169,7 @@ impl RegexEngine {
                     }
 
                     return Some(i);
-                },
+                }
             }
         }
 
