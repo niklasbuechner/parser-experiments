@@ -1,11 +1,11 @@
 mod ast;
 mod parsing;
-mod state_machine;
+mod state_machine_builder;
 
 use ast::get_ast_for_concatenation_list;
 use parsing::calculate_concatenation_list;
-use state_machine::create_state_machine;
-use state_machine::StateMachine;
+use state_machine_builder::StateMachineBuilder;
+use std::collections::HashMap;
 
 #[derive(Debug, PartialEq)]
 pub enum RegexAstElements {
@@ -80,15 +80,66 @@ impl State {
 }
 
 pub struct RegexEngine {
-    state_machine: StateMachine,
+    matching_groups: Vec<MatchingGroup>,
+    transitions: HashMap<usize, HashMap<usize, (usize, bool)>>,
 }
 impl RegexEngine {
-    pub(crate) fn new(state_machine: StateMachine) -> Self {
-        RegexEngine { state_machine }
+    pub(crate) fn new(ast: &RegexAstElements) -> Self {
+        return StateMachineBuilder::create_regex_engine(ast);
     }
 
-    pub fn matches(&self, _string: &str) -> bool {
-        return false;
+    pub(crate) fn new_with_values(
+        matching_groups: Vec<MatchingGroup>,
+        transitions: HashMap<usize, HashMap<usize, (usize, bool)>>,
+    ) -> Self {
+        RegexEngine {
+            matching_groups,
+            transitions,
+        }
+    }
+
+    pub fn matches(&self, string: &str) -> bool {
+        let mut current_state = 0;
+        let mut is_accepted_state = false;
+        let characters: Vec<char> = string.chars().collect();
+
+        for character in characters {
+            let matching_group_transitions = match self.transitions.get(&current_state) {
+                Some(transitions) => transitions,
+                None => return false,
+            };
+
+            let matching_group_index = match self.get_matching_group_index(character) {
+                Some(index) => index,
+                None => return false,
+            };
+
+            match matching_group_transitions.get(&matching_group_index) {
+                Some((new_state, is_accepted)) => {
+                    current_state = *new_state;
+                    is_accepted_state = *is_accepted;
+                },
+                None => return false,
+            }
+        }
+
+        return is_accepted_state;
+    }
+
+    fn get_matching_group_index(&self, character: char) -> Option<usize> {
+        for i in 0..self.matching_groups.len() {
+            match &self.matching_groups[i] {
+                MatchingGroup::Character(matching_character) => {
+                    if *matching_character == character {
+                        return Some(i);
+                    }
+                },
+                MatchingGroup::AcceptedState => {},
+                _ => panic!("Matching group not yet implemented"),
+            }
+        }
+
+        return None;
     }
 }
 
@@ -102,5 +153,5 @@ pub fn get_regex_syntax_tree(regex: &str) -> RegexAstElements {
 pub fn get_regex_engine(regex: &str) -> RegexEngine {
     let ast = get_regex_syntax_tree(regex);
 
-    return RegexEngine::new(create_state_machine(&ast));
+    return RegexEngine::new(&ast);
 }

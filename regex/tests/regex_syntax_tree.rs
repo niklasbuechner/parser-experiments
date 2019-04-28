@@ -18,6 +18,8 @@ fn matches_single_leaf() {
 
     let regex_engine = get_regex_engine(regex);
     assert_eq!(true, regex_engine.matches("a"));
+    assert_eq!(false, regex_engine.matches("aa"));
+    assert_eq!(false, regex_engine.matches("b"));
 }
 
 #[test]
