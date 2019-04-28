@@ -693,7 +693,7 @@ fn match_character_group_with_other_symbols() {
 }
 
 #[test]
-fn lex_negative_character_group() {
+fn match_negative_character_group() {
     let regex = "[^ab]";
     let tree = get_regex_syntax_tree(regex);
 
@@ -705,6 +705,12 @@ fn lex_negative_character_group() {
         Box::new(RegexAstElements::Leaf(MatchingGroup::AcceptedState)),
     );
     assert_eq!(expected_tree, tree);
+
+    let regex_engine = get_regex_engine(regex);
+    assert_eq!(true, regex_engine.matches("c"));
+    assert_eq!(true, regex_engine.matches("f"));
+    assert_eq!(false, regex_engine.matches("a"));
+    assert_eq!(false, regex_engine.matches("ab"));
 }
 
 #[test]

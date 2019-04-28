@@ -130,6 +130,7 @@ impl RegexEngine {
     fn get_matching_group_index(&self, character: char) -> Option<usize> {
         for i in 0..self.matching_groups.len() {
             match &self.matching_groups[i] {
+                MatchingGroup::AcceptedState => {},
                 MatchingGroup::Character(matching_character) => {
                     if *matching_character == character {
                         return Some(i);
@@ -151,8 +152,24 @@ impl RegexEngine {
                         }
                     }
                 }
-                MatchingGroup::AcceptedState => {},
-                _ => panic!("Matching group not yet implemented"),
+                MatchingGroup::NegativeGroup(ref elements) => {
+                    for element in elements {
+                        match element {
+                            MatchingGroupElements::Character(matching_character) => {
+                                if *matching_character == character {
+                                    return None;
+                                }
+                            }
+                            MatchingGroupElements::Range(start_character, end_character) => {
+                                if *start_character <= character && *end_character >= character {
+                                    return None;
+                                }
+                            }
+                        }
+                    }
+
+                    return Some(i);
+                },
             }
         }
 
