@@ -9,6 +9,7 @@ enum ElementType {
     Concatenation,
     Leaf,
     ZeroOrMore,
+    ZeroOrOne,
 }
 
 #[derive(Debug, PartialEq)]
@@ -162,6 +163,21 @@ impl StateMachineBuilder {
             }
             RegexAstElements::ZeroOrMore(ref child) => {
                 element_type = ElementType::ZeroOrMore;
+
+                let child_index = self.create_calculation_stack_for_element(child);
+
+                current_index = self.stack.len();
+                self.stack[child_index].parent_index = Some(current_index);
+
+                left_child_index = Some(child_index);
+
+                is_nullable = true;
+                first_pos = self.stack[child_index].first_pos.clone();
+                last_pos = self.stack[child_index].last_pos.clone();
+                is_accepted_state = false;
+            }
+            RegexAstElements::ZeroOrOne(ref child) => {
+                element_type = ElementType::ZeroOrOne;
 
                 let child_index = self.create_calculation_stack_for_element(child);
 

@@ -193,7 +193,7 @@ fn match_zero_or_more_repetition_with_noise() {
 }
 
 #[test]
-fn lex_zero_or_one_repetition() {
+fn match_zero_or_one_repetition() {
     let regex = "ab?";
     let tree = get_regex_syntax_tree(regex);
 
@@ -207,6 +207,42 @@ fn lex_zero_or_one_repetition() {
         Box::new(RegexAstElements::Leaf(MatchingGroup::AcceptedState)),
     );
     assert_eq!(expected_tree, tree);
+
+    let regex_engine = get_regex_engine(regex);
+    assert_eq!(true, regex_engine.matches("a"));
+    assert_eq!(true, regex_engine.matches("ab"));
+    assert_eq!(false, regex_engine.matches("aba"));
+    assert_eq!(false, regex_engine.matches("abb"));
+}
+
+#[test]
+fn match_zero_or_one_repetition_with_noise() {
+    let regex = "ab?ab";
+    let tree = get_regex_syntax_tree(regex);
+
+    let expected_tree = RegexAstElements::Concatenation(
+        Box::new(RegexAstElements::Concatenation(
+            Box::new(RegexAstElements::Concatenation(
+                Box::new(RegexAstElements::Concatenation(
+                    Box::new(RegexAstElements::Leaf(MatchingGroup::Character('a'))),
+                    Box::new(RegexAstElements::ZeroOrOne(Box::new(
+                        RegexAstElements::Leaf(MatchingGroup::Character('b')),
+                    ))),
+                )),
+                Box::new(RegexAstElements::Leaf(MatchingGroup::Character('a'))),
+            )),
+            Box::new(RegexAstElements::Leaf(MatchingGroup::Character('b'))),
+        )),
+        Box::new(RegexAstElements::Leaf(MatchingGroup::AcceptedState)),
+    );
+    assert_eq!(expected_tree, tree);
+
+    let regex_engine = get_regex_engine(regex);
+    assert_eq!(true, regex_engine.matches("aab"));
+    assert_eq!(true, regex_engine.matches("abab"));
+    assert_eq!(false, regex_engine.matches("abbab"));
+    assert_eq!(false, regex_engine.matches("abb"));
+    assert_eq!(false, regex_engine.matches("aba"));
 }
 
 #[test]
