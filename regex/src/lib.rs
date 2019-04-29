@@ -79,9 +79,11 @@ impl State {
     }
 }
 
+type TransitionForMatchingGroup = HashMap<usize, usize>;
+type StateMachine = HashMap<usize, (TransitionForMatchingGroup, bool)>;
 pub struct RegexEngine {
     matching_groups: Vec<MatchingGroup>,
-    transitions: HashMap<usize, (HashMap<usize, usize>, bool)>,
+    transitions: StateMachine,
 }
 impl RegexEngine {
     pub(crate) fn new(ast: &RegexAstElements) -> Self {
@@ -90,7 +92,7 @@ impl RegexEngine {
 
     pub(crate) fn new_with_values(
         matching_groups: Vec<MatchingGroup>,
-        transitions: HashMap<usize, (HashMap<usize, usize>, bool)>,
+        transitions: StateMachine,
     ) -> Self {
         RegexEngine {
             matching_groups,

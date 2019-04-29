@@ -1,6 +1,8 @@
 use crate::MatchingGroup;
 use crate::RegexAstElements;
 use crate::RegexEngine;
+use crate::StateMachine;
+use crate::TransitionForMatchingGroup;
 use std::collections::HashMap;
 
 #[derive(Debug, PartialEq)]
@@ -246,8 +248,7 @@ impl StateMachineBuilder {
     }
 
     fn convert_to_regex_engine(self) -> RegexEngine {
-        let mut deterministic_transitions: HashMap<usize, (HashMap<usize, usize>, bool)> =
-            HashMap::new();
+        let mut deterministic_transitions: StateMachine = HashMap::new();
         let mut deterministic_states = Vec::with_capacity(100);
         let tree_root = &self.stack[self.stack.len() - 1];
         deterministic_states.push(DeterministicState::new(0, tree_root.first_pos.clone()));
@@ -276,7 +277,7 @@ impl StateMachineBuilder {
                             transitions.insert(matching_group_index, state_id);
                         }
                         None => {
-                            let mut transition_map: HashMap<usize, usize> =
+                            let mut transition_map: TransitionForMatchingGroup =
                                 HashMap::with_capacity(10);
                             transition_map.insert(matching_group_index, state_id);
 
