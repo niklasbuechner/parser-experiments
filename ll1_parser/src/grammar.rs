@@ -10,6 +10,7 @@ pub(crate) enum GrammarSymbol {
 
 pub(crate) struct Grammar {
     productions: HashMap<String, Vec<Vec<GrammarSymbol>>>,
+    start_symbol: String,
 }
 impl Grammar {
     pub fn new() -> Self {
@@ -36,7 +37,7 @@ impl Grammar {
             "T".to_string(),
             vec![vec![
                 GrammarSymbol::NonTerminal("F".to_string()),
-                GrammarSymbol::NonTerminal("F'".to_string()),
+                GrammarSymbol::NonTerminal("T'".to_string()),
             ]],
         );
         productions.insert(
@@ -62,7 +63,10 @@ impl Grammar {
             ],
         );
 
-        Grammar { productions }
+        Grammar {
+            productions,
+            start_symbol: "E".to_string(),
+        }
     }
 
     pub fn get_parse_table(&self) -> HashMap<String, HashMap<Token, Vec<GrammarSymbol>>> {
@@ -143,40 +147,127 @@ impl Grammar {
                 first.push(Token::EmptySet);
             }
 
-            'elements_in_production: for element in production_elements {
-                match element {
-                    GrammarSymbol::Terminal(token) => {
-                        let new_token = token.clone();
-                        if !first.contains(&new_token) {
-                            first.push(new_token);
+            let mut first_pieces = self.get_first_for_string(production_elements);
+            first.append(&mut first_pieces);
+        }
+
+        first
+    }
+
+    fn get_first_for_string(&self, string: &Vec<GrammarSymbol>) -> Vec<Token> {
+        let mut first = Vec::new();
+        let mut one_set_does_not_contain_empty_set = false;
+        let mut set_contain_empty_set = false;
+
+        'elements_in_production: for element in string {
+            match element {
+                GrammarSymbol::Terminal(token) => {
+                    let new_token = token.clone();
+                    if !first.contains(&new_token) {
+                        first.push(new_token);
+                    }
+                    one_set_does_not_contain_empty_set = true;
+
+                    break 'elements_in_production;
+                }
+                GrammarSymbol::NonTerminal(name) => {
+                    let first_non_terminal = self.get_first(&name);
+                    let mut contains_empty_set = false;
+
+                    'first_elements: for first_element in &first_non_terminal {
+                        if first_element == &Token::EmptySet {
+                            contains_empty_set = true;
+
+                            continue 'first_elements;
                         }
 
+                        if !first.contains(first_element) {
+                            first.push(first_element.clone());
+                        }
+                    }
+
+                    if contains_empty_set {
+                        set_contain_empty_set = true;
+                    } else {
+                        one_set_does_not_contain_empty_set = true;
+                    }
+
+                    if !first_non_terminal.contains(&Token::EndSymbol) {
                         break 'elements_in_production;
                     }
-                    GrammarSymbol::NonTerminal(name) => {
-                        let first_non_terminal = self.get_first(name);
+                }
+                GrammarSymbol::EndSymbol => panic!("No production should contain the end symbol"),
+            }
+        }
 
-                        'first_elements: for first_element in &first_non_terminal {
-                            if first_element == &Token::EmptySet {
-                                continue 'first_elements;
+        if !one_set_does_not_contain_empty_set && set_contain_empty_set {
+            first.push(Token::EmptySet);
+        }
+
+        first
+    }
+
+    pub fn get_follow(&self, non_terminal: &str) -> Vec<Token> {
+        let mut follow = Vec::new();
+        if non_terminal == &self.start_symbol {
+            follow.push(Token::EndSymbol);
+        }
+
+        let non_terminal_symbol = GrammarSymbol::NonTerminal(non_terminal.to_string());
+        'non_terminals: for current_non_terminal in self.productions.keys() {
+            let productions = self.productions.get(current_non_terminal).unwrap();
+
+            'productions: for production in productions {
+                if !production.contains(&non_terminal_symbol) {
+                    continue 'productions;
+                }
+
+                let index = production
+                    .iter()
+                    .position(|symbol| symbol == &non_terminal_symbol)
+                    .unwrap();
+                if index == production.len() - 1 {
+                    if current_non_terminal != non_terminal {
+                        let follow_of_parent_production = self.get_follow(current_non_terminal);
+                        'follow_of_parent: for element in &follow_of_parent_production {
+                            if follow.contains(element) {
+                                continue 'follow_of_parent;
                             }
 
-                            if !first.contains(first_element) {
-                                first.push(first_element.clone());
+                            follow.push(element.clone());
+                        }
+                    }
+
+                    continue 'productions;
+                }
+
+                let production_slice = &production[index + 1..].to_vec();
+                let first = self.get_first_for_string(production_slice);
+                'first: for element in &first {
+                    if element == &Token::EmptySet {
+                        if current_non_terminal != non_terminal {
+                            let follow_of_parent_production = self.get_follow(current_non_terminal);
+                            'empty_follow_of_parent: for element in &follow_of_parent_production {
+                                if follow.contains(element) {
+                                    continue 'empty_follow_of_parent;
+                                }
+
+                                follow.push(element.clone());
                             }
                         }
 
-                        if !first_non_terminal.contains(&Token::EndSymbol) {
-                            break 'elements_in_production;
-                        }
+                        continue 'first;
                     }
-                    GrammarSymbol::EndSymbol => {
-                        panic!("No production should contain the end symbol")
+
+                    if follow.contains(element) {
+                        continue 'first;
                     }
+
+                    follow.push(element.clone());
                 }
             }
         }
 
-        first
+        follow
     }
 }
