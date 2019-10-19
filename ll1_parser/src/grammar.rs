@@ -171,61 +171,75 @@ impl Grammar {
             follow.push(Token::EndSymbol);
         }
 
-        let non_terminal_symbol = GrammarSymbol::NonTerminal(non_terminal.to_string());
         'non_terminals: for current_non_terminal in self.productions.keys() {
             let productions = self.productions.get(current_non_terminal).unwrap();
 
             'productions: for production in productions {
-                if !production.contains(&non_terminal_symbol) {
-                    continue 'productions;
-                }
-
-                let index = production
-                    .iter()
-                    .position(|symbol| symbol == &non_terminal_symbol)
-                    .unwrap();
-                if index == production.len() - 1 {
-                    if current_non_terminal != non_terminal {
-                        let follow_of_parent_production = self.get_follow(current_non_terminal);
-                        'follow_of_parent: for element in &follow_of_parent_production {
-                            if follow.contains(element) {
-                                continue 'follow_of_parent;
-                            }
-
-                            follow.push(element.clone());
-                        }
-                    }
-
-                    continue 'productions;
-                }
-
-                let production_slice = &production[index + 1..].to_vec();
-                let first = self.get_first_for_string(production_slice);
-                'first: for element in &first {
-                    if element == &Token::EmptySet {
-                        if current_non_terminal != non_terminal {
-                            let follow_of_parent_production = self.get_follow(current_non_terminal);
-                            'empty_follow_of_parent: for element in &follow_of_parent_production {
-                                if follow.contains(element) {
-                                    continue 'empty_follow_of_parent;
-                                }
-
-                                follow.push(element.clone());
-                            }
-                        }
-
-                        continue 'first;
-                    }
-
-                    if follow.contains(element) {
-                        continue 'first;
-                    }
-
-                    follow.push(element.clone());
-                }
+                let follow_elements =
+                    self.get_follow_for_production(non_terminal, current_non_terminal, production);
+                follow_elements.iter().for_each(|element| {
+                    self.add_not_contained_element::<Token>(&mut follow, element);
+                });
             }
         }
 
         follow
+    }
+
+    fn get_follow_for_production(
+        &self,
+        non_terminal: &str,
+        current_non_terminal: &str,
+        production: &Vec<GrammarSymbol>,
+    ) -> Vec<Token> {
+        let non_terminal_symbol = GrammarSymbol::NonTerminal(non_terminal.to_string());
+        if !production.contains(&non_terminal_symbol) {
+            return Vec::new();
+        }
+
+        let index = production
+            .iter()
+            .position(|symbol| symbol == &non_terminal_symbol)
+            .unwrap();
+        if index == production.len() - 1 {
+            if current_non_terminal != non_terminal {
+                return self.get_follow(current_non_terminal);
+            }
+
+            return Vec::new();
+        }
+
+        let mut follow = Vec::new();
+        let production_slice = &production[index + 1..].to_vec();
+        let first = self.get_first_for_string(production_slice);
+        let mut contains_empty_set = false;
+        for element in &first {
+            if element == &Token::EmptySet {
+                contains_empty_set = true;
+
+                continue;
+            }
+
+            self.add_not_contained_element(&mut follow, element);
+        }
+
+        if contains_empty_set && current_non_terminal != non_terminal {
+            let follow_of_parent_production = self.get_follow(current_non_terminal);
+            for element in &follow_of_parent_production {
+                self.add_not_contained_element(&mut follow, element);
+            }
+        }
+
+        follow
+    }
+
+    fn add_not_contained_element<T: Clone + PartialEq>(
+        &self,
+        elements: &mut Vec<T>,
+        new_element: &T,
+    ) {
+        if !elements.contains(new_element) {
+            elements.push(new_element.clone())
+        }
     }
 }
