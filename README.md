@@ -18,6 +18,9 @@ generates. The files are meant to be an easy grammar to lex in order for me to u
 generates for a lexer. The second folder contains a file with all the features a good lexer generator needs
 to support in order for it to have a practical application.
 
+## Non recursive parser LL(1)
+This is a fully working LL(1) parser implemented to better understand the algorithm.
+
 ## Regex
 The `regex/` folder contains a very small regex engine. I created this project to better understand how regexes
 work and how they can be so efficient.
