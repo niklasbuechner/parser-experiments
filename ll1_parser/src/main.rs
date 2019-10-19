@@ -1,5 +1,8 @@
 mod grammar;
 
+#[cfg(test)]
+mod test;
+
 use grammar::Grammar;
 use grammar::GrammarSymbol;
 
@@ -11,6 +14,7 @@ enum Token {
     Plus,
     Times,
     EndSymbol,
+    EmptySet, // TODO: This is not a token and should therefore not be here.
 }
 
 fn main() {
