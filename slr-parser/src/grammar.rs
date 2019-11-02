@@ -14,62 +14,71 @@ impl Grammar {
 
     pub fn get_slr_table(&self) -> Vec<HashMap<Token, Reaction>> {
         let mut state_0_tokens = HashMap::new();
-        state_0_tokens.insert(Token::Id, Reaction::ShiftTo(5));
-        state_0_tokens.insert(Token::OpeningBracket, Reaction::ShiftTo(4));
+        state_0_tokens.insert(Token::new("Id"), Reaction::ShiftTo(5));
+        state_0_tokens.insert(Token::new("OpeningBracket"), Reaction::ShiftTo(4));
 
         let mut state_1_tokens = HashMap::new();
-        state_1_tokens.insert(Token::Plus, Reaction::ShiftTo(6));
-        state_1_tokens.insert(Token::EndSymbol, Reaction::Accept);
+        state_1_tokens.insert(Token::new("Plus"), Reaction::ShiftTo(6));
+        state_1_tokens.insert(Token::end_token("EndSymbol"), Reaction::Accept);
 
         let mut state_2_tokens = HashMap::new();
-        state_2_tokens.insert(Token::Plus, Reaction::Reduce(Reduction::new("E", 1)));
-        state_2_tokens.insert(Token::Times, Reaction::ShiftTo(7));
+        state_2_tokens.insert(Token::new("Plus"), Reaction::Reduce(Reduction::new("E", 1)));
+        state_2_tokens.insert(Token::new("Times"), Reaction::ShiftTo(7));
         state_2_tokens.insert(
-            Token::ClosingBracket,
+            Token::new("ClosingBracket"),
             Reaction::Reduce(Reduction::new("E", 1)),
         );
-        state_2_tokens.insert(Token::EndSymbol, Reaction::Reduce(Reduction::new("E", 1)));
+        state_2_tokens.insert(
+            Token::end_token("EndSymbol"),
+            Reaction::Reduce(Reduction::new("E", 1)),
+        );
 
         let mut state_3_tokens = HashMap::new();
-        state_3_tokens.insert(Token::Plus, Reaction::Reduce(Reduction::new("T", 1)));
-        state_3_tokens.insert(Token::Times, Reaction::Reduce(Reduction::new("T", 1)));
+        state_3_tokens.insert(Token::new("Plus"), Reaction::Reduce(Reduction::new("T", 1)));
         state_3_tokens.insert(
-            Token::ClosingBracket,
+            Token::new("Times"),
             Reaction::Reduce(Reduction::new("T", 1)),
         );
-        state_3_tokens.insert(Token::EndSymbol, Reaction::Reduce(Reduction::new("T", 1)));
+        state_3_tokens.insert(
+            Token::new("ClosingBracket"),
+            Reaction::Reduce(Reduction::new("T", 1)),
+        );
+        state_3_tokens.insert(
+            Token::end_token("EndSymbol"),
+            Reaction::Reduce(Reduction::new("T", 1)),
+        );
 
         let mut state_4_tokens = HashMap::new();
-        state_4_tokens.insert(Token::Id, Reaction::ShiftTo(5));
-        state_4_tokens.insert(Token::OpeningBracket, Reaction::ShiftTo(4));
+        state_4_tokens.insert(Token::new("Id"), Reaction::ShiftTo(5));
+        state_4_tokens.insert(Token::new("OpeningBracket"), Reaction::ShiftTo(4));
 
         let mut state_5_tokens = HashMap::new();
         let reduce_to_number =
             Reaction::Reduce(Reduction::with_function("F", 1, ast::ast_create_number));
-        state_5_tokens.insert(Token::Plus, reduce_to_number.clone());
-        state_5_tokens.insert(Token::Times, reduce_to_number.clone());
-        state_5_tokens.insert(Token::ClosingBracket, reduce_to_number.clone());
-        state_5_tokens.insert(Token::EndSymbol, reduce_to_number.clone());
+        state_5_tokens.insert(Token::new("Plus"), reduce_to_number.clone());
+        state_5_tokens.insert(Token::new("Times"), reduce_to_number.clone());
+        state_5_tokens.insert(Token::new("ClosingBracket"), reduce_to_number.clone());
+        state_5_tokens.insert(Token::end_token("EndSymbol"), reduce_to_number.clone());
 
         let mut state_6_tokens = HashMap::new();
-        state_6_tokens.insert(Token::Id, Reaction::ShiftTo(5));
-        state_6_tokens.insert(Token::OpeningBracket, Reaction::ShiftTo(4));
+        state_6_tokens.insert(Token::new("Id"), Reaction::ShiftTo(5));
+        state_6_tokens.insert(Token::new("OpeningBracket"), Reaction::ShiftTo(4));
 
         let mut state_7_tokens = HashMap::new();
-        state_7_tokens.insert(Token::Id, Reaction::ShiftTo(5));
-        state_7_tokens.insert(Token::OpeningBracket, Reaction::ShiftTo(4));
+        state_7_tokens.insert(Token::new("Id"), Reaction::ShiftTo(5));
+        state_7_tokens.insert(Token::new("OpeningBracket"), Reaction::ShiftTo(4));
 
         let mut state_8_tokens = HashMap::new();
-        state_8_tokens.insert(Token::Plus, Reaction::ShiftTo(6));
-        state_8_tokens.insert(Token::ClosingBracket, Reaction::ShiftTo(11));
+        state_8_tokens.insert(Token::new("Plus"), Reaction::ShiftTo(6));
+        state_8_tokens.insert(Token::new("ClosingBracket"), Reaction::ShiftTo(11));
 
         let mut state_9_tokens = HashMap::new();
         let reduce_to_addition =
             Reaction::Reduce(Reduction::with_function("E", 3, ast::ast_create_addition));
-        state_9_tokens.insert(Token::Plus, reduce_to_addition.clone());
-        state_9_tokens.insert(Token::Times, Reaction::ShiftTo(7));
-        state_9_tokens.insert(Token::ClosingBracket, reduce_to_addition.clone());
-        state_9_tokens.insert(Token::EndSymbol, reduce_to_addition.clone());
+        state_9_tokens.insert(Token::new("Plus"), reduce_to_addition.clone());
+        state_9_tokens.insert(Token::new("Times"), Reaction::ShiftTo(7));
+        state_9_tokens.insert(Token::new("ClosingBracket"), reduce_to_addition.clone());
+        state_9_tokens.insert(Token::end_token("EndSymbol"), reduce_to_addition.clone());
 
         let mut state_10_tokens = HashMap::new();
         let reduce_to_multiplication = Reaction::Reduce(Reduction::with_function(
@@ -77,10 +86,16 @@ impl Grammar {
             3,
             ast::ast_create_multiplication,
         ));
-        state_10_tokens.insert(Token::Plus, reduce_to_multiplication.clone());
-        state_10_tokens.insert(Token::Times, reduce_to_multiplication.clone());
-        state_10_tokens.insert(Token::ClosingBracket, reduce_to_multiplication.clone());
-        state_10_tokens.insert(Token::EndSymbol, reduce_to_multiplication.clone());
+        state_10_tokens.insert(Token::new("Plus"), reduce_to_multiplication.clone());
+        state_10_tokens.insert(Token::new("Times"), reduce_to_multiplication.clone());
+        state_10_tokens.insert(
+            Token::new("ClosingBracket"),
+            reduce_to_multiplication.clone(),
+        );
+        state_10_tokens.insert(
+            Token::end_token("EndSymbol"),
+            reduce_to_multiplication.clone(),
+        );
 
         let mut state_11_tokens = HashMap::new();
         let reduce_to_calculation = Reaction::Reduce(Reduction::with_function(
@@ -88,10 +103,10 @@ impl Grammar {
             3,
             ast::ast_create_calculation,
         ));
-        state_11_tokens.insert(Token::Plus, reduce_to_calculation.clone());
-        state_11_tokens.insert(Token::Times, reduce_to_calculation.clone());
-        state_11_tokens.insert(Token::ClosingBracket, reduce_to_calculation.clone());
-        state_11_tokens.insert(Token::EndSymbol, reduce_to_calculation.clone());
+        state_11_tokens.insert(Token::new("Plus"), reduce_to_calculation.clone());
+        state_11_tokens.insert(Token::new("Times"), reduce_to_calculation.clone());
+        state_11_tokens.insert(Token::new("ClosingBracket"), reduce_to_calculation.clone());
+        state_11_tokens.insert(Token::end_token("EndSymbol"), reduce_to_calculation.clone());
 
         let mut table: Vec<HashMap<Token, Reaction>> = Vec::new();
         table.push(state_0_tokens);

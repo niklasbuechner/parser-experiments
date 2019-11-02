@@ -6,13 +6,32 @@ use ast::Ast;
 use grammar::Grammar;
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
-enum Token {
-    Id,
-    Plus,
-    Times,
-    OpeningBracket,
-    ClosingBracket,
-    EndSymbol,
+// enum Token {
+//     Id,
+//     Plus,
+//     Times,
+//     OpeningBracket,
+//     ClosingBracket,
+//     EndSymbol,
+// }
+struct Token {
+    value: String,
+    is_end_symbol: bool,
+}
+impl Token {
+    pub fn new(value: &str) -> Self {
+        Token {
+            value: value.to_string(),
+            is_end_symbol: false,
+        }
+    }
+
+    pub fn end_token(value: &str) -> Self {
+        Token {
+            value: value.to_string(),
+            is_end_symbol: false,
+        }
+    }
 }
 
 #[derive(Clone, PartialEq)]
@@ -52,7 +71,12 @@ impl PartialEq for Reduction {
 }
 
 fn main() {
-    let token_stream = vec![Token::Id, Token::Times, Token::Id, Token::EndSymbol];
+    let token_stream = vec![
+        Token::new("Id"),
+        Token::new("Times"),
+        Token::new("Id"),
+        Token::end_token("EndSymbol"),
+    ];
     let grammar = Grammar::new();
 
     let (output, _) = parse_string(&token_stream, grammar);
