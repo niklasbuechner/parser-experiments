@@ -3,7 +3,9 @@ mod grammar;
 mod test;
 
 use ast::Ast;
+use grammar::FirstElements;
 use grammar::Grammar;
+use grammar::GrammarSymbol;
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 // enum Token {

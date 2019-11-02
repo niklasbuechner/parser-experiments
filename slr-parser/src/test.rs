@@ -1,6 +1,10 @@
+mod first;
+
 use super::parse_string;
 use super::Ast;
+use super::FirstElements;
 use super::Grammar;
+use super::GrammarSymbol;
 use super::Token;
 
 #[test]
