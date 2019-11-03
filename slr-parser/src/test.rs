@@ -10,7 +10,6 @@ use super::Ast;
 use super::FirstElements;
 use super::Grammar;
 use super::GrammarSymbol;
-use super::ParserTable;
 use super::Production;
 use super::Reaction;
 use super::Reduction;

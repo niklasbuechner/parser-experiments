@@ -5,6 +5,7 @@ mod slr_closure;
 mod slr_goto;
 
 use super::ast;
+use super::Ast;
 use super::Reaction;
 use super::Reduction;
 use super::Token;
@@ -33,7 +34,7 @@ impl GrammarSymbol {
 }
 
 pub(crate) struct Grammar {
-    productions: HashMap<String, Vec<Vec<GrammarSymbol>>>,
+    productions: HashMap<String, Vec<Production>>,
     pub starting_state: usize,
     starting_non_terminal: String,
     end_token: String,
@@ -44,37 +45,53 @@ impl Grammar {
         grammar.set_end_token("EndSymbol");
         grammar.set_starting_non_terminal("E'");
 
-        grammar.add_production("E'", vec![GrammarSymbol::non_terminal("E")]);
+        grammar.add_production(Production::from_string(
+            "E'",
+            vec![GrammarSymbol::non_terminal("E")],
+        ));
 
-        grammar.add_production(
+        grammar.add_production(Production::with_function(
             "E",
             vec![
                 GrammarSymbol::non_terminal("E"),
                 GrammarSymbol::terminal(Token::new("Plus")),
                 GrammarSymbol::non_terminal("T"),
             ],
-        );
-        grammar.add_production("E", vec![GrammarSymbol::non_terminal("T")]);
+            ast::ast_create_addition,
+        ));
+        grammar.add_production(Production::from_string(
+            "E",
+            vec![GrammarSymbol::non_terminal("T")],
+        ));
 
-        grammar.add_production(
+        grammar.add_production(Production::with_function(
             "T",
             vec![
                 GrammarSymbol::non_terminal("T"),
                 GrammarSymbol::terminal(Token::new("Times")),
                 GrammarSymbol::non_terminal("F"),
             ],
-        );
-        grammar.add_production("T", vec![GrammarSymbol::non_terminal("F")]);
+            ast::ast_create_multiplication,
+        ));
+        grammar.add_production(Production::from_string(
+            "T",
+            vec![GrammarSymbol::non_terminal("F")],
+        ));
 
-        grammar.add_production(
+        grammar.add_production(Production::with_function(
             "F",
             vec![
                 GrammarSymbol::terminal(Token::new("OpeningBracket")),
                 GrammarSymbol::non_terminal("E"),
                 GrammarSymbol::terminal(Token::new("ClosingBracket")),
             ],
-        );
-        grammar.add_production("F", vec![GrammarSymbol::terminal(Token::new("Id"))]);
+            ast::ast_create_calculation,
+        ));
+        grammar.add_production(Production::with_function(
+            "F",
+            vec![GrammarSymbol::terminal(Token::new("Id"))],
+            ast::ast_create_number,
+        ));
 
         grammar
     }
@@ -88,7 +105,8 @@ impl Grammar {
         }
     }
 
-    pub fn add_production(&mut self, non_terminal: &str, production: Vec<GrammarSymbol>) {
+    pub fn add_production(&mut self, production: Production) {
+        let non_terminal = production.get_non_terminal();
         let potential_productions = self.productions.get_mut(non_terminal);
         if let Some(productions) = potential_productions {
             productions.push(production);
@@ -106,7 +124,7 @@ impl Grammar {
         self.end_token = end_token.to_string();
     }
 
-    pub fn get_production(&self, non_terminal: &str) -> &Vec<Vec<GrammarSymbol>> {
+    pub fn get_production(&self, non_terminal: &str) -> &Vec<Production> {
         self.productions.get(non_terminal).unwrap()
     }
 

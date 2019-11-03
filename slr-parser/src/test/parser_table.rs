@@ -1,6 +1,5 @@
 use super::ast;
 use super::Grammar;
-use super::ParserTable;
 use super::Reaction;
 use super::Reduction;
 use super::Token;

@@ -60,7 +60,7 @@ impl First {
 
         let productions = grammar.get_production(non_terminal);
         'productions: for production in productions {
-            self.calculate_first_for_string(grammar, production)
+            self.calculate_first_for_string(grammar, production.get_elements())
                 .into_iter()
                 .for_each(|token| self.add_token(non_terminal, token));
         }
@@ -107,7 +107,8 @@ impl First {
 
         let productions = grammar.get_production(non_terminal);
         'productions: for production in productions {
-            let is_production_nullable = self.calculate_nullability_for_string(grammar, production);
+            let is_production_nullable =
+                self.calculate_nullability_for_string(grammar, production.get_elements());
             if is_production_nullable {
                 self.is_non_terminal_nullable
                     .insert(non_terminal.to_string(), true);

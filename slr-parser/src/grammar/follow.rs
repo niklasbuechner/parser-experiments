@@ -1,6 +1,7 @@
 use super::First;
 use super::Grammar;
 use super::GrammarSymbol;
+use super::Production;
 use super::Token;
 use std::collections::HashMap;
 
@@ -33,7 +34,7 @@ impl Follow {
 
         let symbol = GrammarSymbol::non_terminal(non_terminal);
         let productions = self.get_productions_with_symbol(grammar, &symbol);
-        for (current_non_terminal, production) in productions {
+        for production in productions {
             let substring = self.get_string_after_symbol(production, &symbol);
 
             let first = First::get_first_for_string(grammar, &substring);
@@ -44,13 +45,17 @@ impl Follow {
             });
 
             if first.empty_set == true {
-                if None == self.follow_of_non_terminal.get(&current_non_terminal) {
-                    self.calculate_follow(grammar, &current_non_terminal);
+                if None
+                    == self
+                        .follow_of_non_terminal
+                        .get(production.get_non_terminal())
+                {
+                    self.calculate_follow(grammar, production.get_non_terminal());
                 }
 
                 let follow_of_parent = self
                     .follow_of_non_terminal
-                    .get(&current_non_terminal)
+                    .get(production.get_non_terminal())
                     .unwrap();
                 follow_of_parent.iter().for_each(|token| {
                     if !follow.contains(token) {
@@ -68,7 +73,7 @@ impl Follow {
         &self,
         grammar: &'a Grammar,
         symbol: &GrammarSymbol,
-    ) -> Vec<(String, &'a Vec<GrammarSymbol>)> {
+    ) -> Vec<&'a Production> {
         let mut productions_with_symbol = Vec::new();
 
         let non_terminals = grammar.get_non_terminals();
@@ -76,10 +81,8 @@ impl Follow {
             grammar
                 .get_production(&single_non_terminal)
                 .into_iter()
-                .filter(|production| production.contains(&symbol))
-                .for_each(|production| {
-                    productions_with_symbol.push((single_non_terminal.clone(), production))
-                });
+                .filter(|production| production.get_elements().contains(&symbol))
+                .for_each(|production| productions_with_symbol.push(production));
         }
 
         productions_with_symbol
@@ -87,14 +90,17 @@ impl Follow {
 
     fn get_string_after_symbol(
         &self,
-        production: &Vec<GrammarSymbol>,
+        production: &Production,
         symbol: &GrammarSymbol,
     ) -> Vec<GrammarSymbol> {
-        let position = production.iter().position(|element| element == symbol);
+        let position = production
+            .get_elements()
+            .iter()
+            .position(|element| element == symbol);
         if position == None {
             return Vec::new();
         }
 
-        production[position.unwrap() + 1..].to_vec()
+        production.get_elements()[position.unwrap() + 1..].to_vec()
     }
 }

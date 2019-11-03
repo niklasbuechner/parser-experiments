@@ -45,9 +45,10 @@ impl ParserTable {
                     for element in follow {
                         actions.insert(
                             element,
-                            Reaction::Reduce(Reduction::new(
+                            Reaction::Reduce(Reduction::with_function(
                                 production.get_non_terminal(),
                                 production.get_element_size(),
+                                production.get_function().clone(),
                             )),
                         );
                     }
@@ -85,11 +86,7 @@ impl StateCollection {
         };
 
         let initial_non_terminal = grammar.get_starting_non_terminal();
-        let initial_productions = grammar
-            .get_production(initial_non_terminal)
-            .iter()
-            .map(|production| Production::from_string(initial_non_terminal, production.clone()))
-            .collect();
+        let initial_productions = grammar.get_production(initial_non_terminal).clone();
         let initial_state = SlrClosure::get_closure(grammar, initial_productions);
         collection.add_state(initial_state.clone());
 

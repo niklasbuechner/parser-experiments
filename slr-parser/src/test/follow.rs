@@ -1,5 +1,6 @@
 use super::Grammar;
 use super::GrammarSymbol;
+use super::Production;
 use super::Token;
 
 fn get_ll_grammar() -> Grammar {
@@ -7,51 +8,54 @@ fn get_ll_grammar() -> Grammar {
     grammar.set_starting_non_terminal("E");
     grammar.set_end_token("EndSymbol");
 
-    grammar.add_production(
+    grammar.add_production(Production::from_string(
         "E",
         vec![
             GrammarSymbol::non_terminal("T"),
             GrammarSymbol::non_terminal("E'"),
         ],
-    );
+    ));
 
-    grammar.add_production(
+    grammar.add_production(Production::from_string(
         "E'",
         vec![
             GrammarSymbol::terminal(Token::new("Plus")),
             GrammarSymbol::non_terminal("T"),
             GrammarSymbol::non_terminal("E'"),
         ],
-    );
-    grammar.add_production("E'", Vec::new());
+    ));
+    grammar.add_production(Production::from_string("E'", Vec::new()));
 
-    grammar.add_production(
+    grammar.add_production(Production::from_string(
         "T",
         vec![
             GrammarSymbol::non_terminal("F"),
             GrammarSymbol::non_terminal("T'"),
         ],
-    );
+    ));
 
-    grammar.add_production(
+    grammar.add_production(Production::from_string(
         "T'",
         vec![
             GrammarSymbol::terminal(Token::new("Times")),
             GrammarSymbol::non_terminal("F"),
             GrammarSymbol::non_terminal("T'"),
         ],
-    );
-    grammar.add_production("T'", Vec::new());
+    ));
+    grammar.add_production(Production::from_string("T'", Vec::new()));
 
-    grammar.add_production(
+    grammar.add_production(Production::from_string(
         "F",
         vec![
             GrammarSymbol::terminal(Token::new("OpeningBracket")),
             GrammarSymbol::non_terminal("E"),
             GrammarSymbol::terminal(Token::new("ClosingBracket")),
         ],
-    );
-    grammar.add_production("F", vec![GrammarSymbol::terminal(Token::new("Id"))]);
+    ));
+    grammar.add_production(Production::from_string(
+        "F",
+        vec![GrammarSymbol::terminal(Token::new("Id"))],
+    ));
 
     grammar
 }

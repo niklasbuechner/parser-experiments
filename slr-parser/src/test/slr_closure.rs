@@ -15,8 +15,9 @@ fn test_slr_closure() {
             GrammarSymbol::non_terminal("F"),
         ],
         0,
+        |_| {},
     );
-    let t_f = Production::new("T", vec![GrammarSymbol::non_terminal("F")], 0);
+    let t_f = Production::new("T", vec![GrammarSymbol::non_terminal("F")], 0, |_| {});
     let expected_closure = vec![
         t_plus.clone(),
         t_f.clone(),
@@ -28,8 +29,14 @@ fn test_slr_closure() {
                 GrammarSymbol::terminal(Token::new("ClosingBracket")),
             ],
             0,
+            |_| {},
         ),
-        Production::new("F", vec![GrammarSymbol::terminal(Token::new("Id"))], 0),
+        Production::new(
+            "F",
+            vec![GrammarSymbol::terminal(Token::new("Id"))],
+            0,
+            |_| {},
+        ),
     ];
 
     let closure = SlrClosure::get_closure(&grammar, vec![t_plus, t_f]);

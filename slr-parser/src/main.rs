@@ -6,7 +6,6 @@ use ast::Ast;
 use grammar::FirstElements;
 use grammar::Grammar;
 use grammar::GrammarSymbol;
-use grammar::ParserTable;
 use grammar::Production;
 use grammar::SlrClosure;
 use grammar::SlrGoto;
@@ -15,14 +14,6 @@ use std::fmt::Formatter;
 use std::fmt::Result;
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
-// enum Token {
-//     Id,
-//     Plus,
-//     Times,
-//     OpeningBracket,
-//     ClosingBracket,
-//     EndSymbol,
-// }
 struct Token {
     value: String,
     is_end_symbol: bool,

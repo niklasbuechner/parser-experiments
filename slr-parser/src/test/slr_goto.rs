@@ -14,8 +14,14 @@ fn test_get_goto_symbols_cursor_at_0() {
                 GrammarSymbol::non_terminal("F"),
             ],
             0,
+            |_| {},
         ),
-        Production::new("F", vec![GrammarSymbol::terminal(Token::new("Id"))], 0),
+        Production::new(
+            "F",
+            vec![GrammarSymbol::terminal(Token::new("Id"))],
+            0,
+            |_| {},
+        ),
     ];
     let expected_symbols = vec![
         GrammarSymbol::non_terminal("T"),
@@ -33,6 +39,7 @@ fn test_get_goto_symbols_end_of_production() {
         "F",
         vec![GrammarSymbol::terminal(Token::new("Id"))],
         1,
+        |_| {},
     )];
 
     let goto_symbols = SlrGoto::get_goto_symbols(&productions);
@@ -51,6 +58,7 @@ fn test_get_goto_symbols_middle_of_production() {
                 GrammarSymbol::non_terminal("F"),
             ],
             1,
+            |_| {},
         ),
         Production::new(
             "F",
@@ -60,6 +68,7 @@ fn test_get_goto_symbols_middle_of_production() {
                 GrammarSymbol::terminal(Token::new("Closing")),
             ],
             1,
+            |_| {},
         ),
     ];
     let expected_symbols = vec![
@@ -83,8 +92,14 @@ fn test_get_goto() {
                 GrammarSymbol::non_terminal("F"),
             ],
             0,
+            |_| {},
         ),
-        Production::new("F", vec![GrammarSymbol::terminal(Token::new("Id"))], 0),
+        Production::new(
+            "F",
+            vec![GrammarSymbol::terminal(Token::new("Id"))],
+            0,
+            |_| {},
+        ),
     ];
     let expected_productions = vec![Production::new(
         "T",
@@ -94,6 +109,7 @@ fn test_get_goto() {
             GrammarSymbol::non_terminal("F"),
         ],
         1,
+        |_| {},
     )];
 
     let goto_productions = SlrGoto::get_goto(&GrammarSymbol::non_terminal("T"), &productions);
