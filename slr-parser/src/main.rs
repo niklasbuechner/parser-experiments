@@ -6,9 +6,13 @@ use ast::Ast;
 use grammar::FirstElements;
 use grammar::Grammar;
 use grammar::GrammarSymbol;
+use grammar::ParserTable;
 use grammar::Production;
 use grammar::SlrClosure;
 use grammar::SlrGoto;
+use std::fmt::Debug;
+use std::fmt::Formatter;
+use std::fmt::Result;
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 // enum Token {
@@ -39,7 +43,7 @@ impl Token {
     }
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 enum Reaction {
     ShiftTo(usize),
     Reduce(Reduction),
@@ -68,6 +72,15 @@ impl Reduction {
         }
     }
 }
+impl Debug for Reduction {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(
+            f,
+            "{:?} - Reduce stack by {:?})",
+            self.non_terminal, self.amount_of_elements_on_stack
+        )
+    }
+}
 impl PartialEq for Reduction {
     fn eq(&self, other: &Self) -> bool {
         return self.non_terminal == other.non_terminal
@@ -91,7 +104,7 @@ fn main() {
 
 fn parse_string(tokens: &Vec<Token>, grammar: Grammar) -> (String, Vec<Ast>) {
     let goto_table = grammar.get_goto_table();
-    let parser_table = grammar.get_slr_table();
+    let action_table = grammar.get_slr_table();
     let mut index = 0;
     let mut ast_stack = Vec::with_capacity(10);
     let mut state_stack = Vec::with_capacity(100);
@@ -102,7 +115,7 @@ fn parse_string(tokens: &Vec<Token>, grammar: Grammar) -> (String, Vec<Ast>) {
     loop {
         let symbol = &tokens[index];
         let current_state = state_stack[state_stack.len() - 1];
-        let reaction = parser_table[current_state].get(symbol);
+        let reaction = action_table[current_state].get(symbol);
 
         if reaction == None {
             println!("{}", output);

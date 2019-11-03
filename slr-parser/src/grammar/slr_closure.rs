@@ -37,6 +37,14 @@ impl Production {
     pub fn move_cursor_ahead(&mut self) {
         self.cursor += 1;
     }
+
+    pub fn cursor_is_at_end(&self) -> bool {
+        self.cursor == self.elements.len()
+    }
+
+    pub fn get_element_size(&self) -> usize {
+        self.elements.len()
+    }
 }
 
 pub(crate) struct SlrClosure {}
@@ -57,7 +65,6 @@ impl SlrClosure {
                             continue 'productions;
                         }
 
-                        println!("Get productions from {}", name);
                         grammar
                             .get_production(name)
                             .iter()

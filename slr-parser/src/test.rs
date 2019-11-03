@@ -1,14 +1,19 @@
 mod first;
 mod follow;
+mod parser_table;
 mod slr_closure;
 mod slr_goto;
 
+use super::ast;
 use super::parse_string;
 use super::Ast;
 use super::FirstElements;
 use super::Grammar;
 use super::GrammarSymbol;
+use super::ParserTable;
 use super::Production;
+use super::Reaction;
+use super::Reduction;
 use super::SlrClosure;
 use super::SlrGoto;
 use super::Token;
