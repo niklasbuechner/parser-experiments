@@ -1,4 +1,5 @@
 mod first;
+mod follow;
 
 use super::ast;
 use super::Reaction;
@@ -6,8 +7,10 @@ use super::Reduction;
 use super::Token;
 use first::First;
 pub(crate) use first::FirstElements;
+use follow::Follow;
 use std::collections::HashMap;
 
+#[derive(Clone, Debug, PartialEq)]
 pub(crate) enum GrammarSymbol {
     NonTerminal(String),
     Terminal(Token),
@@ -25,13 +28,14 @@ impl GrammarSymbol {
 pub(crate) struct Grammar {
     productions: HashMap<String, Vec<Vec<GrammarSymbol>>>,
     pub starting_state: usize,
+    starting_non_terminal: String,
+    end_token: String,
 }
 impl Grammar {
     pub fn new() -> Self {
-        let mut grammar = Grammar {
-            productions: HashMap::new(),
-            starting_state: 0,
-        };
+        let mut grammar = Grammar::empty();
+        grammar.set_end_token("EndSymbol");
+        grammar.set_starting_non_terminal("E'");
 
         grammar.add_production("E'", vec![GrammarSymbol::non_terminal("E")]);
 
@@ -70,8 +74,10 @@ impl Grammar {
 
     pub fn empty() -> Self {
         Grammar {
+            end_token: String::new(),
             productions: HashMap::new(),
             starting_state: 0,
+            starting_non_terminal: String::new(),
         }
     }
 
@@ -85,12 +91,36 @@ impl Grammar {
         }
     }
 
+    pub fn set_starting_non_terminal(&mut self, non_terminal: &str) {
+        self.starting_non_terminal = non_terminal.to_string();
+    }
+
+    pub fn set_end_token(&mut self, end_token: &str) {
+        self.end_token = end_token.to_string();
+    }
+
     pub fn get_production(&self, non_terminal: &str) -> &Vec<Vec<GrammarSymbol>> {
         self.productions.get(non_terminal).unwrap()
     }
 
     pub fn get_first(&self, non_terminal: &str) -> FirstElements {
         First::get_first(&self, non_terminal)
+    }
+
+    pub fn get_follow(&self, non_terminal: &str) -> Vec<Token> {
+        Follow::get_follow(&self, non_terminal)
+    }
+
+    pub fn get_starting_non_terminal(&self) -> &String {
+        &self.starting_non_terminal
+    }
+
+    pub fn get_end_symbol(&self) -> Token {
+        Token::new(&self.end_token)
+    }
+
+    pub fn get_non_terminals(&self) -> Vec<&String> {
+        self.productions.keys().collect()
     }
 
     pub fn get_slr_table(&self) -> Vec<HashMap<Token, Reaction>> {

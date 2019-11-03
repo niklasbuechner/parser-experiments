@@ -5,6 +5,8 @@ use super::Token;
 
 fn get_ll_grammar() -> Grammar {
     let mut grammar = Grammar::empty();
+    grammar.set_starting_non_terminal("E");
+    grammar.set_end_token("EndSymbol");
 
     grammar.add_production(
         "E",
