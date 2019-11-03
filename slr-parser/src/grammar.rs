@@ -1,11 +1,11 @@
-mod first_calculator;
+mod first;
 
 use super::ast;
 use super::Reaction;
 use super::Reduction;
 use super::Token;
-use first_calculator::First;
-pub(crate) use first_calculator::FirstElements;
+use first::First;
+pub(crate) use first::FirstElements;
 use std::collections::HashMap;
 
 pub(crate) enum GrammarSymbol {
