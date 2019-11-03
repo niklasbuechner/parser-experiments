@@ -33,6 +33,10 @@ impl Production {
 
         return Some(&self.elements[self.cursor]);
     }
+
+    pub fn move_cursor_ahead(&mut self) {
+        self.cursor += 1;
+    }
 }
 
 pub(crate) struct SlrClosure {}

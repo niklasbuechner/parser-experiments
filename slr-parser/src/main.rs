@@ -8,6 +8,7 @@ use grammar::Grammar;
 use grammar::GrammarSymbol;
 use grammar::Production;
 use grammar::SlrClosure;
+use grammar::SlrGoto;
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 // enum Token {

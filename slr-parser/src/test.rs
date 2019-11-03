@@ -1,6 +1,7 @@
 mod first;
 mod follow;
 mod slr_closure;
+mod slr_goto;
 
 use super::parse_string;
 use super::Ast;
@@ -9,6 +10,7 @@ use super::Grammar;
 use super::GrammarSymbol;
 use super::Production;
 use super::SlrClosure;
+use super::SlrGoto;
 use super::Token;
 
 #[test]
