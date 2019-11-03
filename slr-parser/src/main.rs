@@ -6,6 +6,8 @@ use ast::Ast;
 use grammar::FirstElements;
 use grammar::Grammar;
 use grammar::GrammarSymbol;
+use grammar::Production;
+use grammar::SlrClosure;
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 // enum Token {

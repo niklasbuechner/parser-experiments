@@ -1,5 +1,6 @@
 mod first;
 mod follow;
+mod slr_closure;
 
 use super::ast;
 use super::Reaction;
@@ -8,6 +9,8 @@ use super::Token;
 use first::First;
 pub(crate) use first::FirstElements;
 use follow::Follow;
+pub(crate) use slr_closure::Production;
+pub(crate) use slr_closure::SlrClosure;
 use std::collections::HashMap;
 
 #[derive(Clone, Debug, PartialEq)]

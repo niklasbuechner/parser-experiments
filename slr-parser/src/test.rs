@@ -1,11 +1,14 @@
 mod first;
 mod follow;
+mod slr_closure;
 
 use super::parse_string;
 use super::Ast;
 use super::FirstElements;
 use super::Grammar;
 use super::GrammarSymbol;
+use super::Production;
+use super::SlrClosure;
 use super::Token;
 
 #[test]
